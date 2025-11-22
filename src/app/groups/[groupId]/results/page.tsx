@@ -7,8 +7,8 @@ import Link from "next/link";
 import db from "@/utils/db";
 import GEOS from "@/data/canada";
 import { Geo, Restriction } from "@/types";
-import buildUrl from "@/utils/buildUrl";
 import Header from "@/components/ui/header";
+import RestaurantList from "@/app/groups/[groupId]/results/RestaurantList";
 
 export default function Group({
   params,
@@ -74,28 +74,25 @@ export default function Group({
   const priceIdsArray = Array.from(priceIds);
   const cuisineIdsArray = Array.from(cuisineIds.keys());
 
-  const restaurantListUrl = buildUrl(
-    geo.id,
-    cuisineIdsArray,
-    dietIdsArray,
-    priceIdsArray
-  );
-
   return (
-    <div className="items-center text-white justify-items-center min-h-screen gap-16  bg-neutral-50">
+    <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
       <Header showInvite />
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <h1 className="text-4xl font-bold">Results</h1>
+        <div className="w-full">
+          <RestaurantList
+            location={`${geo.city}, ${geo.region}`}
+            cuisines={cuisineIdsArray}
+            diets={dietIdsArray}
+            prices={priceIdsArray}
+          />
+        </div>
 
-        <a
-          className="btn-primary"
-          href={restaurantListUrl}
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          href={`/groups/${groupId}`}
+          className="text-blue-600 hover:text-blue-800"
         >
-          Open Restaurant List
-        </a>
-        <Link href={`/groups/${groupId}`}>← Back to restrictions</Link>
+          ← Back to restrictions
+        </Link>
       </main>
     </div>
   );
