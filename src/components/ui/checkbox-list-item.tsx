@@ -51,20 +51,33 @@ const CheckboxListItem = React.forwardRef<
             : "bg-white border-neutral-300 group-hover:border-primary-400"
         )}
       >
-        {/* Checkmark */}
-        {checked && (
-          <svg
-            className="w-4 h-4 text-white"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="3"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M5 13l4 4L19 7" />
-          </svg>
-        )}
+        {/* Icon - Checkmark for positive, X for negative */}
+        {checked &&
+          (positive ? (
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="3"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="3"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ))}
       </div>
 
       {/* Label with conditional styling */}
