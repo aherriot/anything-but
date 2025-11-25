@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { useRestaurants, Restaurant } from "@/hooks/useRestaurants";
 
-interface RestaurantListProps {
+type RestaurantListProps = {
   location: string;
   cuisines: string[];
-  diets: string[];
-  prices: string[];
-}
+  latitude?: number;
+  longitude?: number;
+};
 
 const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
   <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -75,14 +75,13 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
 const RestaurantList = ({
   location,
   cuisines,
-  diets,
-  prices,
+  latitude,
+  longitude,
 }: RestaurantListProps) => {
   const { data, isLoading, error } = useRestaurants({
-    location,
     cuisines,
-    diets,
-    prices,
+    latitude,
+    longitude,
     enabled: true,
   });
 
@@ -124,22 +123,12 @@ const RestaurantList = ({
     <div className="w-full max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-200 mb-2">
-          Restaurants in {data.location}
+          Restaurants in {location}
         </h2>
         <div className="flex flex-wrap gap-2 text-sm text-gray-600">
           {data.filters.cuisines.length > 0 && (
             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
               Cuisines: {data.filters.cuisines.join(", ")}
-            </span>
-          )}
-          {data.filters.diets.length > 0 && (
-            <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-              Diets: {data.filters.diets.join(", ")}
-            </span>
-          )}
-          {data.filters.prices.length > 0 && (
-            <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
-              Price: {data.filters.prices.join(", ")}
             </span>
           )}
         </div>

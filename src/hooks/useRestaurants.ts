@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-interface Restaurant {
-  id: number;
+type Restaurant = {
+  id: string;
   name: string;
   cuisine: string;
   rating: string;
@@ -11,59 +11,57 @@ interface Restaurant {
   description: string;
   website: string;
   image: string;
-}
+  latitude?: number;
+  longitude?: number;
+};
 
-interface RestaurantApiResponse {
+type RestaurantApiResponse = {
   success: boolean;
   data: {
     restaurants: Restaurant[];
-    location: string;
     filters: {
       cuisines: string[];
-      diets: string[];
-      prices: string[];
     };
     total: number;
   } | null;
   error?: string;
-}
+};
 
-interface UseRestaurantsParams {
-  location?: string;
+type UseRestaurantsParams = {
   cuisines?: string[];
-  diets?: string[];
-  prices?: string[];
+  latitude?: number;
+  longitude?: number;
   enabled?: boolean;
-}
+};
 
 export const useRestaurants = ({
-  location,
   cuisines = [],
-  diets = [],
-  prices = [],
+  latitude,
+  longitude,
   enabled = true,
 }: UseRestaurantsParams) => {
-  const [data, setData] = useState<RestaurantApiResponse['data']>(null);
+  const [data, setData] = useState<RestaurantApiResponse["data"]>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
 
     const fetchRestaurants = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const params = new URLSearchParams();
-        
-        if (location) params.append('location', location);
-        if (cuisines.length > 0) params.append('cuisines', cuisines.join(','));
-        if (diets.length > 0) params.append('diets', diets.join(','));
-        if (prices.length > 0) params.append('prices', prices.join(','));
+        const response = await fetch(`/api/restaurants`, {
+          method: "POST",
+          body: JSON.stringify({ latitude, longitude, cuisines }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        const response = await fetch(`/api/restaurants?${params.toString()}`);
-        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -73,20 +71,20 @@ export const useRestaurants = ({
         if (result.success) {
           setData(result.data);
         } else {
-          throw new Error(result.error || 'Failed to fetch restaurants');
+          throw new Error(result.error || "Failed to fetch restaurants");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+        const errorMessage =
+          err instanceof Error ? err.message : "An unexpected error occurred";
         setError(errorMessage);
-        console.error('Error fetching restaurants:', err);
+        console.error("Error fetching restaurants:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchRestaurants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, JSON.stringify(cuisines), JSON.stringify(diets), JSON.stringify(prices), enabled]);
+  }, [latitude, longitude, cuisines, enabled]);
 
   return {
     data,

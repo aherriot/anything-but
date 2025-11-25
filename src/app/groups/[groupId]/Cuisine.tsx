@@ -5,6 +5,7 @@ import { GroupQueryRestrictions, PersonalRestriction, Screen } from "@/types";
 import toggleRestriction from "../toggleRestriction";
 import { Button } from "@/components/ui/button";
 import { CheckboxListItem } from "@/components/ui/checkbox-list-item";
+import Link from "next/link";
 
 type CuisineProps = {
   guestId: string;
@@ -17,7 +18,7 @@ export default function Cuisine({
   guestId,
   groupId,
   restrictions,
-  setScreen,
+  // setScreen,
 }: CuisineProps) {
   const cuisineIds = new Map<string, PersonalRestriction>();
 
@@ -67,9 +68,11 @@ export default function Cuisine({
         </div>
 
         <div className="mb-8 w-full flex justify-center">
-          <Button variant="primary" size="lg" onClick={() => setScreen("diet")}>
-            Next
-          </Button>
+          <Link href={`/groups/${groupId}/results`}>
+            <Button variant="primary" size="lg">
+              See Results
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

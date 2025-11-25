@@ -8,7 +8,8 @@ import db from "@/utils/db";
 import GEOS from "@/data/canada";
 import { Geo, Restriction } from "@/types";
 import Header from "@/components/ui/header";
-import RestaurantList from "@/app/groups/[groupId]/results/RestaurantList";
+import RestaurantList from "./RestaurantList";
+import { getCityCoordinates } from "@/utils/geocoding";
 
 export default function Group({
   params,
@@ -52,8 +53,6 @@ export default function Group({
   }
 
   const cuisineIds = new Map<string, Restriction>();
-  const dietIds = new Set<string>();
-  const priceIds = new Set<string>();
 
   group.restrictions.map((restriction) => {
     if (restriction.restrictionType === "cuisine") {
@@ -62,17 +61,14 @@ export default function Group({
         restrictionId: restriction.id,
         guestId: restriction.guestId,
       });
-    } else if (restriction.restrictionType === "diet") {
-      dietIds.add(restriction.referenceId);
-    } else if (restriction.restrictionType === "price") {
-      priceIds.add(restriction.referenceId);
     }
   });
 
-  // Convert the Set to an array
-  const dietIdsArray = Array.from(dietIds);
-  const priceIdsArray = Array.from(priceIds);
   const cuisineIdsArray = Array.from(cuisineIds.keys());
+
+  // Get coordinates for the location
+  const locationName = `${geo.city}, ${geo.region}`;
+  const coordinates = getCityCoordinates(geo.city);
 
   return (
     <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
@@ -80,10 +76,10 @@ export default function Group({
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <div className="w-full">
           <RestaurantList
-            location={`${geo.city}, ${geo.region}`}
+            location={locationName}
             cuisines={cuisineIdsArray}
-            diets={dietIdsArray}
-            prices={priceIdsArray}
+            latitude={coordinates?.latitude}
+            longitude={coordinates?.longitude}
           />
         </div>
 
