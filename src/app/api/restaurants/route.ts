@@ -1,3 +1,4 @@
+import { getFilteredCuisines } from "@/utils/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 // Types for Google Places API Nearby Search response
@@ -38,14 +39,12 @@ interface GooglePlacesResponse {
 interface Restaurant {
   id: string;
   name: string;
-  cuisine: string;
   rating: string;
   priceRange: string;
   address: string;
   phone: string;
   description: string;
   website: string;
-  image: string;
   latitude?: number;
   longitude?: number;
 }
@@ -71,7 +70,9 @@ export async function POST(request: NextRequest) {
     // Build the request body for Google Places API
     const requestBody = {
       includedTypes: ["restaurant"],
-      includedPrimaryTypes: cuisines ?? undefined,
+      includedPrimaryTypes: getFilteredCuisines(cuisines)?.map(
+        (cuisine) => cuisine.id
+      ),
       maxResultCount: 5,
       locationRestriction: {
         circle: {
@@ -139,55 +140,10 @@ export async function POST(request: NextRequest) {
       return priceLevelMap[priceLevel || ""] || "$$";
     };
 
-    // Helper function to extract cuisine from types
-    const extractCuisine = (types?: string[]): string => {
-      if (!types) return "Restaurant";
-
-      const cuisineMap: { [key: string]: string } = {
-        italian_restaurant: "Italian",
-        chinese_restaurant: "Chinese",
-        japanese_restaurant: "Japanese",
-        mexican_restaurant: "Mexican",
-        indian_restaurant: "Indian",
-        french_restaurant: "French",
-        thai_restaurant: "Thai",
-        mediterranean_restaurant: "Mediterranean",
-        american_restaurant: "American",
-        seafood_restaurant: "Seafood",
-        steak_house: "Steakhouse",
-        pizza_restaurant: "Pizza",
-        sushi_restaurant: "Sushi",
-        vietnamese_restaurant: "Vietnamese",
-        korean_restaurant: "Korean",
-        middle_eastern_restaurant: "Middle Eastern",
-        greek_restaurant: "Greek",
-        spanish_restaurant: "Spanish",
-        brazilian_restaurant: "Brazilian",
-        barbecue_restaurant: "BBQ",
-      };
-
-      for (const type of types) {
-        if (cuisineMap[type]) {
-          return cuisineMap[type];
-        }
-      }
-      return "Restaurant";
-    };
-
-    // Helper function to get photo URL
-    const getPhotoUrl = (place: GooglePlace): string => {
-      if (place.photos && place.photos.length > 0 && GOOGLE_API_KEY) {
-        const photoName = place.photos[0].name;
-        return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=400&maxHeightPx=300&key=${GOOGLE_API_KEY}`;
-      }
-      return `https://via.placeholder.com/400x300/cccccc/666666?text=${encodeURIComponent(place.displayName.text)}`;
-    };
-
     // Transform Google Places data into restaurant format
-    let restaurants: Restaurant[] = googleData.places.map((place) => ({
+    const restaurants: Restaurant[] = googleData.places.map((place) => ({
       id: place.id,
       name: place.displayName.text,
-      cuisine: extractCuisine(place.types),
       rating: place.rating?.toFixed(1) || "N/A",
       priceRange: mapPriceLevel(place.priceLevel),
       address: place.formattedAddress || "Address not available",
@@ -197,21 +153,20 @@ export async function POST(request: NextRequest) {
         "Phone not available",
       description:
         place.editorialSummary?.text ||
-        `A ${extractCuisine(place.types)} restaurant${place.userRatingCount ? ` with ${place.userRatingCount} reviews` : ""}.`,
+        `A restaurant${place.userRatingCount ? ` with ${place.userRatingCount} reviews` : ""}.`,
       website: place.websiteUri || "#",
-      image: getPhotoUrl(place),
       latitude: place.location?.latitude,
       longitude: place.location?.longitude,
     }));
 
     // Filter by cuisines if specified
-    if (cuisines) {
-      restaurants = restaurants.filter((restaurant) =>
-        cuisines.some((cuisine: string) =>
-          restaurant.cuisine.toLowerCase().includes(cuisine.trim())
-        )
-      );
-    }
+    // if (cuisines) {
+    //   restaurants = restaurants.filter((restaurant) =>
+    //     cuisines.some((cuisine: string) =>
+    //       restaurant.cuisine.toLowerCase().includes(cuisine.trim())
+    //     )
+    //   );
+    // }
 
     // Return the transformed data
     return NextResponse.json({

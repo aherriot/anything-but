@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useRestaurants, Restaurant } from "@/hooks/useRestaurants";
+import { getFilteredCuisines } from "@/utils/utils";
 
 type RestaurantListProps = {
   location: string;
@@ -13,18 +13,6 @@ type RestaurantListProps = {
 const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
   <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
     <div className="flex items-start gap-4">
-      <Image
-        src={restaurant.image}
-        alt={restaurant.name}
-        width={96}
-        height={96}
-        className="w-24 h-24 rounded-lg object-cover"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.src =
-            "https://via.placeholder.com/96x96/cccccc/666666?text=No+Image";
-        }}
-      />
       <div className="flex-1">
         <div className="flex items-start justify-between">
           <div>
@@ -128,15 +116,14 @@ const RestaurantList = ({
         <div className="flex flex-wrap gap-2 text-sm text-gray-600">
           {data.filters.cuisines.length > 0 && (
             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-              Cuisines: {data.filters.cuisines.join(", ")}
+              Cuisines:{" "}
+              {getFilteredCuisines(data.filters.cuisines)
+                .map((cuisine) => cuisine.name)
+                .join(", ")}
             </span>
           )}
         </div>
-        <p className="text-sm text-gray-500 mt-2">
-          Found {data.total} restaurant{data.total !== 1 ? "s" : ""}
-        </p>
       </div>
-
       <div className="space-y-6">
         {data.restaurants.map((restaurant) => (
           <RestaurantCard key={restaurant.id} restaurant={restaurant} />
