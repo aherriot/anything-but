@@ -10,6 +10,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@instantdb/react": "^0.22.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
