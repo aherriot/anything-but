@@ -1,38 +1,37 @@
 "use client";
 
 import { CUISINES } from "@/utils/constants";
-import { GroupQueryRestrictions, PersonalRestriction, Screen } from "@/types";
+import { PersonalRestriction } from "@/types";
 import toggleRestriction from "../toggleRestriction";
 import { Button } from "@/components/ui/button";
 import { CheckboxListItem } from "@/components/ui/checkbox-list-item";
 import Link from "next/link";
 
+type ExcludedCuisine = {
+  id: string;
+  guestId: string;
+  cuisineId: string;
+};
+
 type CuisineProps = {
   guestId: string;
   groupId: string;
-  restrictions: GroupQueryRestrictions;
-  setScreen: (screen: Screen) => void;
+  excludedCuisines: ExcludedCuisine[];
 };
 
 export default function Cuisine({
   guestId,
   groupId,
-  restrictions,
-  // setScreen,
+  excludedCuisines,
 }: CuisineProps) {
   const cuisineIds = new Map<string, PersonalRestriction>();
 
-  restrictions.map((restriction) => {
-    if (restriction.restrictionType === "cuisine") {
-      if (
-        !cuisineIds.has(restriction.referenceId) &&
-        restriction.guestId === guestId
-      ) {
-        cuisineIds.set(restriction.referenceId, {
-          cuisineId: restriction.referenceId,
-          restrictionId: restriction.id,
-        });
-      }
+  excludedCuisines.forEach((cuisine) => {
+    if (!cuisineIds.has(cuisine.cuisineId) && cuisine.guestId === guestId) {
+      cuisineIds.set(cuisine.cuisineId, {
+        cuisineId: cuisine.cuisineId,
+        restrictionId: cuisine.id,
+      });
     }
   });
 
@@ -42,7 +41,6 @@ export default function Cuisine({
         <h2 className="heading-lg text-primary-300 mb-2">
           What food will you NOT eat?
         </h2>
-        {/* Checkbox list with no gaps */}
         <div className="bg-black shadow-md mb-8">
           {CUISINES.map((cuisine) => {
             const restriction = cuisineIds.get(cuisine.id);
@@ -56,9 +54,7 @@ export default function Cuisine({
                   toggleRestriction({
                     groupId,
                     guestId,
-                    restrictionType: "cuisine",
-                    restrictionId: restriction?.restrictionId ?? "",
-                    referenceId: cuisine.id,
+                    cuisineId: cuisine.id,
                     isChecked,
                   });
                 }}

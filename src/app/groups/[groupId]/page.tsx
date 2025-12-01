@@ -1,14 +1,12 @@
 "use client";
 
 import { use, useState } from "react";
-import { Geo, Screen } from "@/types";
-import GEOS from "@/data/canada";
+import { Screen } from "@/types";
 import useLocalStorageState from "@/hooks/useLocalStorageState";
+import { usePlaceDetails } from "@/hooks/usePlaceDetails";
 
 import Name from "./Name";
 import Cuisine from "./Cuisine";
-import Diet from "./Diet";
-import Price from "./Price";
 import db from "@/utils/db";
 import Header from "@/components/ui/header";
 
@@ -31,9 +29,17 @@ export default function Groups({
         },
         limit: 1,
       },
-      restrictions: {},
+      excludedCuisines: {},
     },
   });
+
+  const group = data?.groups?.[0];
+
+  const {
+    placeDetails: geo,
+    isLoading: isPlaceLoading,
+    error: placeError,
+  } = usePlaceDetails(group?.placeId);
 
   if (!guestId) {
     return (
@@ -44,21 +50,37 @@ export default function Groups({
     );
   }
 
-  if (isLoading) return <div>Fetching data...</div>;
+  if (isLoading || isPlaceLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header showInvite />
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   if (error) return <div>Error fetching data: {error.message}</div>;
 
-  const groups = data.groups;
-  if (!groups || groups.length !== 1) {
+  if (!group) {
     return <div>Group not found</div>;
   }
-  const group = groups[0];
 
-  const geo: Geo | undefined = GEOS.find(
-    (location) => location.id === group.geoId
-  );
+  if (placeError) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header showInvite />
+        <div>Error loading location: {placeError}</div>
+      </div>
+    );
+  }
 
   if (!geo) {
-    return <div>Location not found</div>;
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header showInvite />
+        <div>Location not found</div>
+      </div>
+    );
   }
 
   // const {
@@ -89,28 +111,9 @@ export default function Groups({
         )}
         {screen === "cuisine" && (
           <Cuisine
-            setScreen={setScreen}
             guestId={guestId}
             groupId={groupId}
-            restrictions={group.restrictions}
-          />
-        )}
-
-        {screen === "diet" && (
-          <Diet
-            setScreen={setScreen}
-            guestId={guestId}
-            groupId={groupId}
-            restrictions={group.restrictions}
-          />
-        )}
-
-        {screen === "price" && (
-          <Price
-            setScreen={setScreen}
-            guestId={guestId}
-            groupId={groupId}
-            restrictions={group.restrictions}
+            excludedCuisines={group.excludedCuisines}
           />
         )}
       </div>

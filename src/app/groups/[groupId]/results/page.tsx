@@ -5,11 +5,10 @@ import { use } from "react";
 import Link from "next/link";
 
 import db from "@/utils/db";
-import GEOS from "@/data/canada";
-import { Geo, Restriction } from "@/types";
+import { Restriction } from "@/types";
 import Header from "@/components/ui/header";
 import RestaurantList from "./RestaurantList";
-import { getCityCoordinates } from "@/utils/geocoding";
+import { usePlaceDetails } from "@/hooks/usePlaceDetails";
 
 export default function Group({
   params,
@@ -27,48 +26,69 @@ export default function Group({
         },
         limit: 1,
       },
-      restrictions: {},
+      excludedCuisines: {},
     },
   });
+
+  const group = data?.groups?.[0];
+
+  const {
+    placeDetails: geo,
+    isLoading: isPlaceLoading,
+    error: placeError,
+  } = usePlaceDetails(group?.placeId);
 
   if (!guestId) {
     return <div>No guestId found</div>;
   }
 
-  if (isLoading) return <div>Fetching data...</div>;
+  if (isLoading || isPlaceLoading) {
+    return (
+      <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+        <Header showInvite />
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   if (error) return <div>Error fetching data: {error.message}</div>;
 
-  const { groups } = data;
-  if (!groups || groups.length !== 1) {
+  if (!group) {
     return <div>Group not found</div>;
   }
-  const group = groups[0];
 
-  const geo: Geo | undefined = GEOS.find(
-    (location) => location.id === group.geoId
-  );
+  if (placeError) {
+    return (
+      <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+        <Header showInvite />
+        <div>Error loading location: {placeError}</div>
+      </div>
+    );
+  }
 
   if (!geo) {
-    return <div>Location not found</div>;
+    return (
+      <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+        <Header showInvite />
+        <div>Location not found</div>
+      </div>
+    );
   }
 
   const cuisineIds = new Map<string, Restriction>();
 
-  group.restrictions.map((restriction) => {
-    if (restriction.restrictionType === "cuisine") {
-      cuisineIds.set(restriction.referenceId, {
-        cuisineId: restriction.referenceId,
-        restrictionId: restriction.id,
-        guestId: restriction.guestId,
-      });
-    }
+  group.excludedCuisines.map((cuisine) => {
+    cuisineIds.set(cuisine.cuisineId, {
+      cuisineId: cuisine.cuisineId,
+      restrictionId: cuisine.id,
+      guestId: cuisine.guestId,
+    });
   });
 
   const cuisineIdsArray = Array.from(cuisineIds.keys());
 
-  // Get coordinates for the location
+  // Location info comes from Google Places API
   const locationName = `${geo.city}, ${geo.region}`;
-  const coordinates = getCityCoordinates(geo.city);
 
   return (
     <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
@@ -78,8 +98,8 @@ export default function Group({
           <RestaurantList
             location={locationName}
             cuisines={cuisineIdsArray}
-            latitude={coordinates?.latitude}
-            longitude={coordinates?.longitude}
+            latitude={geo.latitude}
+            longitude={geo.longitude}
           />
         </div>
 

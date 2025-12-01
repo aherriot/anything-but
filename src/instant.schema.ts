@@ -5,25 +5,22 @@ const _schema = i.schema({
     groups: i.entity({
       name: i.string(),
       ownerId: i.string(),
-      geoId: i.string(),
+      placeId: i.string(),
       createdAt: i.date(),
     }),
-    restrictions: i.entity({
+    excludedCuisines: i.entity({
       // The ID of the guest this restriction belongs to
       guestId: i.string(),
-      // The type of restriction: cuisine, dietary, or price
-      restrictionType: i.string<"cuisine" | "diet" | "price">(),
       /**
-       * The ID of the entity the restriction applies to.
-       * Either a specific cuisine, dietary restriction, or price range
-       * */
-      referenceId: i.string(),
+       * The ID of the cuisine that is excluded
+       */
+      cuisineId: i.string(),
     }),
   },
   links: {
     groupRestrictions: {
-      forward: { on: "restrictions", has: "one", label: "group" },
-      reverse: { on: "groups", has: "many", label: "restrictions" },
+      forward: { on: "excludedCuisines", has: "one", label: "group" },
+      reverse: { on: "groups", has: "many", label: "excludedCuisines" },
     },
   },
   rooms: {
