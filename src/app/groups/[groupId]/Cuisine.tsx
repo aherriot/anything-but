@@ -24,13 +24,16 @@ export default function Cuisine({
   groupId,
   excludedCuisines,
 }: CuisineProps) {
+  // Map to store the restrictions for the current guest
   const cuisineIds = new Map<string, PersonalRestriction>();
-
-  excludedCuisines.forEach((cuisine) => {
-    if (!cuisineIds.has(cuisine.cuisineId) && cuisine.guestId === guestId) {
-      cuisineIds.set(cuisine.cuisineId, {
-        cuisineId: cuisine.cuisineId,
-        restrictionId: cuisine.id,
+  excludedCuisines.forEach((restriction) => {
+    if (
+      !cuisineIds.has(restriction.cuisineId) &&
+      restriction.guestId === guestId
+    ) {
+      cuisineIds.set(restriction.cuisineId, {
+        cuisineId: restriction.cuisineId,
+        restrictionId: restriction.id,
       });
     }
   });
@@ -54,6 +57,7 @@ export default function Cuisine({
                   toggleRestriction({
                     groupId,
                     guestId,
+                    restrictionId: restriction?.restrictionId || "",
                     cuisineId: cuisine.id,
                     isChecked,
                   });

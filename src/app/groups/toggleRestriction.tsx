@@ -4,6 +4,7 @@ import db from "@/utils/db";
 type toggleRestrictionType = {
   groupId: string;
   guestId: string;
+  restrictionId: string;
   cuisineId: string;
   isChecked: boolean;
 };
@@ -11,6 +12,7 @@ type toggleRestrictionType = {
 export default async function toggleRestriction({
   groupId,
   guestId,
+  restrictionId,
   cuisineId,
   isChecked,
 }: toggleRestrictionType) {
@@ -24,6 +26,6 @@ export default async function toggleRestriction({
         .link({ group: groupId })
     );
   } else {
-    await db.transact(db.tx.excludedCuisines[cuisineId].delete());
+    await db.transact(db.tx.excludedCuisines[restrictionId].delete());
   }
 }
