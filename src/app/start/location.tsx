@@ -23,8 +23,8 @@ async function createGroup(name: string, location: Location) {
       name,
       createdAt: JSON.stringify(new Date()),
       ownerId: localId,
-      placeId: location.id,
-    })
+      placeId: location.placeId,
+    }),
   );
 
   redirect(`/groups/${newGroupId}`);
@@ -32,7 +32,7 @@ async function createGroup(name: string, location: Location) {
 
 export default function Location({ setScreen, name }: LocationProps) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
-    null
+    null,
   );
 
   return (
