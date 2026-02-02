@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import QRCode from "react-qr-code";
@@ -14,12 +15,12 @@ function Header({ className, showInvite, ...props }: HeaderProps) {
     <header
       className={cn(
         "flex items-center justify-between w-full h-16 px-4 mb-8 bg-neutral-200",
-        className
+        className,
       )}
       {...props}
     >
       <h1 className="text-gradient-warm heading-md font-bold">
-        I&apos;m easy, but...
+        <Link href="/">I&apos;m easy, but...</Link>
       </h1>
       {showInvite && (
         <button

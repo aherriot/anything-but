@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-// import Link from "next/link";
-// import { redirect } from "next/navigation";
 import Name from "./name";
 import Location from "./location";
 import useLocalStorageState from "@/hooks/useLocalStorageState";

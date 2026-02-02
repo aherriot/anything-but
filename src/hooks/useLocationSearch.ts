@@ -1,20 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 
-export interface Location {
-  id: string;
-  name: string;
-  city: string;
-  region: string;
-  formattedAddress: string;
-  latitude: number;
-  longitude: number;
-}
+export type Location = {
+  placeId: string;
+  text: string;
+};
 
-interface LocationSearchResponse {
+type LocationSearchResponse = {
   success: boolean;
   data: Location[];
   error?: string;
-}
+};
 
 export const useLocationSearch = (query: string, debounceMs: number = 300) => {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -36,7 +31,7 @@ export const useLocationSearch = (query: string, debounceMs: number = 300) => {
       params.append("query", searchQuery);
 
       const response = await fetch(
-        `/api/places/autocomplete?${params.toString()}`
+        `/api/places/autocomplete?${params.toString()}`,
       );
 
       if (!response.ok) {

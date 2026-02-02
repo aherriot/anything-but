@@ -35,7 +35,7 @@ export default function LocationCombobox({
           <ComboboxInput
             className="input pr-10"
             displayValue={(location: Location | null) => {
-              return location ? `${location.city}, ${location.region}` : "";
+              return location ? location.text : "";
             }}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={placeholder}
@@ -100,17 +100,14 @@ export default function LocationCombobox({
           ) : (
             locations.map((location) => (
               <ComboboxOption
-                key={location.id}
+                key={location.placeId}
                 value={location}
                 className="group relative cursor-pointer select-none py-3 px-4 data-[focus]:bg-primary-200 data-[focus]:text-primary-900 text-neutral-500 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="block truncate font-medium group-data-[selected]:font-semibold group-data-[selected]:text-gray-800">
-                      {location.city}, {location.region}
-                    </span>
-                    <span className="block truncate text-xs text-neutral-400 group-data-[focus]:text-neutral-600">
-                      {location.formattedAddress}
+                      {location.text}
                     </span>
                   </div>
                   <span className="hidden group-data-[selected]:flex items-center text-primary-600">
