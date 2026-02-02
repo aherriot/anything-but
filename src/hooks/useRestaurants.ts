@@ -2,17 +2,18 @@ import { useState, useEffect } from "react";
 
 type Restaurant = {
   id: string;
+  type: string;
   name: string;
   cuisine: string;
   rating: string;
   priceRange: string;
-  address: string;
-  phone: string;
-  description: string;
+  address: string | null;
+  phone: string | null;
+  description: string | null;
   website: string;
-  image: string;
   latitude?: number;
   longitude?: number;
+  photoUrl?: string;
 };
 
 type RestaurantApiResponse = {

@@ -13,6 +13,14 @@ type RestaurantListProps = {
 const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
   <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
     <div className="flex items-start gap-4">
+      {restaurant.photoUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/api/places/photo?photoReference=${encodeURIComponent(restaurant.photoUrl)}&maxWidth=400&maxHeight=400`}
+          alt={restaurant.name}
+          className="w-32 h-32 object-cover rounded-lg flex-shrink-0"
+        />
+      )}
       <div className="flex-1">
         <div className="flex items-start justify-between">
           <div>
@@ -24,15 +32,19 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
           <div className="text-right">
             <div className="flex items-center gap-1">
               <span className="text-yellow-500">★</span>
-              <span className="font-medium">{restaurant.rating}</span>
+              <span className="font-medium text-black">
+                {restaurant.rating}
+              </span>
             </div>
             <p className="text-sm text-gray-600">{restaurant.priceRange}</p>
           </div>
         </div>
 
         <p className="text-gray-700 mt-2 text-sm line-clamp-2">
-          {restaurant.description}
+          {restaurant.description || `A ${restaurant.rating}★ restaurant.`}
         </p>
+
+        <p className="text-gray-700">{restaurant.type}</p>
 
         <div className="mt-4 space-y-1 text-sm text-gray-600">
           <p>{restaurant.address}</p>
@@ -48,12 +60,14 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
           >
             Visit Website
           </a>
-          <a
-            href={`tel:${restaurant.phone.replace(/[^\d]/g, "")}`}
-            className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Call
-          </a>
+          {restaurant.phone && (
+            <a
+              href={`tel:${restaurant.phone.replace(/[^\d]/g, "")}`}
+              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Call
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -106,6 +120,8 @@ const RestaurantList = ({
       </div>
     );
   }
+
+  console.log(data.restaurants);
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6">

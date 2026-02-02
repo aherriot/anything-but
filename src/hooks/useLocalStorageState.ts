@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
  */
 export default function useLocalStorageState<T>(
   key: string,
-  initialValue: T
+  initialValue: T,
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
   // Initialize state with the initial value (will be hydrated from localStorage)
   const [value, setValue] = useState<T>(initialValue);

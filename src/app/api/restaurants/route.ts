@@ -2,13 +2,12 @@ import { getFilteredCuisines } from "@/utils/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 // Types for Google Places API Nearby Search response
-interface GooglePlacePhoto {
+type GooglePlacePhoto = {
   name: string;
   widthPx: number;
   heightPx: number;
-}
-
-interface GooglePlace {
+};
+type GooglePlace = {
   id: string;
   displayName: {
     text: string;
@@ -18,48 +17,57 @@ interface GooglePlace {
   rating?: number;
   userRatingCount?: number;
   priceLevel?: string;
-  types?: string[];
+  primaryType: string;
   nationalPhoneNumber?: string;
-  internationalPhoneNumber?: string;
   websiteUri?: string;
   editorialSummary?: {
     text: string;
   };
-  photos?: GooglePlacePhoto[];
-  location?: {
-    latitude: number;
-    longitude: number;
-  };
-}
+  photos: GooglePlacePhoto[];
+};
 
-interface GooglePlacesResponse {
+type GooglePlacesResponse = {
   places: GooglePlace[];
-}
+};
 
-interface Restaurant {
+type Restaurant = {
   id: string;
   name: string;
-  rating: string;
+  rating: string | null;
   priceRange: string;
-  address: string;
-  phone: string;
-  description: string;
+  address: string | null;
+  phone: string | null;
+  description?: string | null;
   website: string;
   latitude?: number;
   longitude?: number;
-}
+  type: string;
+};
 
 // Google Places API endpoint
 const GOOGLE_PLACES_API_URL =
   "https://places.googleapis.com/v1/places:searchNearby";
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_SEARCH_API_FIELD_MASK = [
+  "places.id",
+  "places.displayName",
+  "places.formattedAddress",
+  "places.rating",
+  "places.userRatingCount",
+  "places.priceLevel",
+  "places.primaryType",
+  "places.nationalPhoneNumber",
+  "places.websiteUri",
+  "places.editorialSummary",
+  "places.photos",
+].join(",");
 
 export async function POST(request: NextRequest) {
   try {
     // Check if API key is configured
     if (!GOOGLE_API_KEY) {
       throw new Error(
-        "Google Places API key is not configured. Please set GOOGLE_PLACES_API_KEY in your environment variables."
+        "Google Places API key is not configured. Please set GOOGLE_PLACES_API_KEY in your environment variables.",
       );
     }
 
@@ -71,8 +79,9 @@ export async function POST(request: NextRequest) {
     const requestBody = {
       includedTypes: ["restaurant"],
       includedPrimaryTypes: getFilteredCuisines(cuisines)?.map(
-        (cuisine) => cuisine.id
+        (cuisine) => cuisine.id,
       ),
+      excludedPrimaryTypes: cuisines,
       maxResultCount: 5,
       locationRestriction: {
         circle: {
@@ -94,8 +103,7 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
           "X-Goog-Api-Key": GOOGLE_API_KEY,
-          "X-Goog-FieldMask":
-            "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.priceLevel,places.types,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.editorialSummary,places.photos,places.location",
+          "X-Goog-FieldMask": GOOGLE_SEARCH_API_FIELD_MASK,
         },
         body: JSON.stringify(requestBody),
         signal: AbortSignal.timeout(15000), // 15 second timeout
@@ -109,7 +117,7 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error("Google Places API error:", response.status, errorText);
       throw new Error(
-        `Google Places API error: ${response.status} ${response.statusText}`
+        `Google Places API error: ${response.status} ${response.statusText}`,
       );
     }
 
@@ -140,33 +148,26 @@ export async function POST(request: NextRequest) {
       return priceLevelMap[priceLevel || ""] || "$$";
     };
 
+    googleData.places.forEach((place) => {
+      console.log(place);
+    });
+
     // Transform Google Places data into restaurant format
     const restaurants: Restaurant[] = googleData.places.map((place) => ({
       id: place.id,
       name: place.displayName.text,
       rating: place.rating?.toFixed(1) || "N/A",
       priceRange: mapPriceLevel(place.priceLevel),
-      address: place.formattedAddress || "Address not available",
-      phone:
-        place.nationalPhoneNumber ||
-        place.internationalPhoneNumber ||
-        "Phone not available",
-      description:
-        place.editorialSummary?.text ||
-        `A restaurant${place.userRatingCount ? ` with ${place.userRatingCount} reviews` : ""}.`,
+      address: place.formattedAddress || null,
+      phone: place.nationalPhoneNumber ?? null,
+      description: place.editorialSummary?.text ?? null,
       website: place.websiteUri || "#",
-      latitude: place.location?.latitude,
-      longitude: place.location?.longitude,
+      type: place.primaryType,
+      photoUrl:
+        place.photos && place.photos.length > 0
+          ? place.photos[0].name
+          : undefined,
     }));
-
-    // Filter by cuisines if specified
-    // if (cuisines) {
-    //   restaurants = restaurants.filter((restaurant) =>
-    //     cuisines.some((cuisine: string) =>
-    //       restaurant.cuisine.toLowerCase().includes(cuisine.trim())
-    //     )
-    //   );
-    // }
 
     // Return the transformed data
     return NextResponse.json({
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
             : "An unexpected error occurred",
         data: null,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
