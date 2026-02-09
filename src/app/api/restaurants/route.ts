@@ -1,4 +1,4 @@
-import { getFilteredCuisines } from "@/utils/utils";
+import { getFilteredCuisines } from "@/utils/cuisine";
 import { NextRequest, NextResponse } from "next/server";
 
 // Types for Google Places API Nearby Search response
@@ -30,7 +30,7 @@ type GooglePlacesResponse = {
   places: GooglePlace[];
 };
 
-type Restaurant = {
+type ApiRestaurant = {
   id: string;
   name: string;
   rating: string | null;
@@ -66,14 +66,70 @@ export async function POST(request: NextRequest) {
   try {
     // Check if API key is configured
     if (!GOOGLE_API_KEY) {
-      throw new Error(
-        "Google Places API key is not configured. Please set GOOGLE_PLACES_API_KEY in your environment variables.",
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Google Places API key is not configured",
+          data: null,
+        },
+        { status: 500 },
       );
     }
 
     // Get query parameters from the request
     const body = await request.json();
     const { cuisines, latitude, longitude } = body;
+
+    // Validate input
+    if (typeof latitude !== "number" || typeof longitude !== "number") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "latitude and longitude must be numbers",
+          data: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "latitude must be between -90 and 90, longitude between -180 and 180",
+          data: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!Array.isArray(cuisines)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "cuisines must be an array of strings",
+          data: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!cuisines.every((c: unknown) => typeof c === "string")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Each cuisine must be a string",
+          data: null,
+        },
+        { status: 400 },
+      );
+    }
 
     // Build the request body for Google Places API
     const requestBody = {
@@ -148,12 +204,8 @@ export async function POST(request: NextRequest) {
       return priceLevelMap[priceLevel || ""] || "$$";
     };
 
-    googleData.places.forEach((place) => {
-      console.log(place);
-    });
-
     // Transform Google Places data into restaurant format
-    const restaurants: Restaurant[] = googleData.places.map((place) => ({
+    const restaurants: ApiRestaurant[] = googleData.places.map((place) => ({
       id: place.id,
       name: place.displayName.text,
       rating: place.rating?.toFixed(1) || "N/A",

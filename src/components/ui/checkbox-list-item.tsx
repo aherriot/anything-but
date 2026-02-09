@@ -24,10 +24,10 @@ const CheckboxListItem = React.forwardRef<
       htmlFor={id}
       className={cn(
         "relative flex items-center w-full px-6 py-4 cursor-pointer transition-all duration-200",
-        "border-b border-neutral-200 hover:bg-primary-500/10",
-        "active:bg-primary-100",
+        "border-b border-neutral-800 hover:bg-primary-500/10",
+        "active:bg-primary-500/20",
         "group",
-        className
+        className,
       )}
     >
       {/* Hidden native checkbox for accessibility */}
@@ -48,7 +48,7 @@ const CheckboxListItem = React.forwardRef<
             ? positive
               ? "bg-secondary-500 border-secondary-500"
               : "bg-primary-500 border-primary-500"
-            : "bg-white border-neutral-300 group-hover:border-primary-400"
+            : "bg-white border-neutral-600 group-hover:border-primary-400",
         )}
       >
         {/* Icon - Checkmark for positive, X for negative */}
@@ -87,10 +87,10 @@ const CheckboxListItem = React.forwardRef<
           positive
             ? checked
               ? "text-secondary-700 font-semibold"
-              : "text-neutral-900 group-hover:text-primary-600"
+              : "text-neutral-100 group-hover:text-primary-600"
             : checked
               ? "text-neutral-400"
-              : "text-neutral-900 group-hover:text-primary-600"
+              : "text-neutral-100 group-hover:text-primary-600",
         )}
       >
         {label}
@@ -101,7 +101,7 @@ const CheckboxListItem = React.forwardRef<
             className="absolute inset-0 flex items-center"
             aria-hidden="true"
           >
-            <span className="w-full border-t-2 border-neutral-400" />
+            <span className="w-full border-t-2 border-neutral-600" />
           </span>
         )}
       </span>

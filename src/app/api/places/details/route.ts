@@ -23,8 +23,13 @@ const PLACE_DETAILS_URL = "https://places.googleapis.com/v1/places";
 export async function GET(request: NextRequest) {
   try {
     if (!GOOGLE_API_KEY) {
-      throw new Error(
-        "Google Places API key is not configured. Please set GOOGLE_PLACES_API_KEY in your environment variables."
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Google Places API key is not configured",
+          data: null,
+        },
+        { status: 500 },
       );
     }
 
@@ -38,7 +43,7 @@ export async function GET(request: NextRequest) {
           error: "placeId parameter is required",
           data: null,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -58,7 +63,7 @@ export async function GET(request: NextRequest) {
       console.error(
         "Google Place Details API error:",
         response.status,
-        errorText
+        errorText,
       );
       throw new Error(`Google Place Details API error: ${response.status}`);
     }
@@ -104,7 +109,7 @@ export async function GET(request: NextRequest) {
             : "An unexpected error occurred",
         data: null,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

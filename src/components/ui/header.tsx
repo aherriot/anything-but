@@ -11,10 +11,15 @@ type HeaderProps = React.ComponentProps<"header"> & {
 
 function Header({ className, showInvite, ...props }: HeaderProps) {
   const [showingInviteQR, setShowingInviteQR] = React.useState(false);
+  const [currentUrl, setCurrentUrl] = React.useState("");
+
+  React.useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
   return (
     <header
       className={cn(
-        "flex items-center justify-between w-full h-16 px-4 mb-8 bg-neutral-200",
+        "flex items-center justify-between w-full h-16 px-4 mb-8 bg-neutral-800",
         className,
       )}
       {...props}
@@ -39,7 +44,7 @@ function Header({ className, showInvite, ...props }: HeaderProps) {
             <QRCode
               size={256}
               style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-              value={window.location.href}
+              value={currentUrl}
               viewBox={`0 0 256 256`}
             />
           </div>

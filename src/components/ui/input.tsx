@@ -8,7 +8,7 @@ function Input({ label, className, type, ...props }: InputProps) {
   return (
     <div className="mt-4">
       {label && (
-        <label className="block text-sm font-medium text-gray-300">
+        <label className="block text-sm font-medium text-neutral-200">
           {label}
         </label>
       )}

@@ -21,8 +21,13 @@ export async function GET(request: NextRequest) {
   try {
     // Check if API key is configured
     if (!GOOGLE_API_KEY) {
-      throw new Error(
-        "Google Places API key is not configured. Please set GOOGLE_PLACES_API_KEY in your environment variables.",
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Google Places API key is not configured",
+          data: [],
+        },
+        { status: 500 },
       );
     }
 

@@ -1,13 +1,6 @@
 import { id } from "@instantdb/react";
 import db from "@/utils/db";
-
-type toggleRestrictionType = {
-  groupId: string;
-  guestId: string;
-  restrictionId: string;
-  cuisineId: string;
-  isChecked: boolean;
-};
+import type { ToggleRestrictionParams } from "@/types";
 
 export default async function toggleRestriction({
   groupId,
@@ -15,7 +8,7 @@ export default async function toggleRestriction({
   restrictionId,
   cuisineId,
   isChecked,
-}: toggleRestrictionType) {
+}: ToggleRestrictionParams) {
   if (isChecked) {
     await db.transact(
       db.tx.excludedCuisines[id()]
@@ -23,7 +16,7 @@ export default async function toggleRestriction({
           guestId,
           cuisineId,
         })
-        .link({ group: groupId })
+        .link({ group: groupId }),
     );
   } else {
     await db.transact(db.tx.excludedCuisines[restrictionId].delete());

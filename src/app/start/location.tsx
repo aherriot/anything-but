@@ -7,9 +7,11 @@ import LocationCombobox from "@/components/LocationCombobox";
 import type { Location } from "@/hooks/useLocationSearch";
 import db from "@/utils/db";
 
+import type { StartScreen } from "@/types";
+
 type LocationProps = {
   name: string;
-  setScreen: (screen: "start" | "location") => void;
+  setScreen: (screen: StartScreen) => void;
 };
 
 async function createGroup(name: string, location: Location) {
@@ -37,7 +39,7 @@ export default function Location({ setScreen, name }: LocationProps) {
 
   return (
     <div className="flex flex-col gap-4 row-start-2 items-center sm:items-start">
-      <h1 className="text-gray-200 text-xl">
+      <h1 className="text-neutral-200 text-xl">
         {name}, where do you want to find a restaurant?
       </h1>
       <LocationCombobox

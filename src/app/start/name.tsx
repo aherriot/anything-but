@@ -1,10 +1,12 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+import type { StartScreen } from "@/types";
+
 type NameProps = {
   name: string;
   setName: (name: string) => void;
-  setScreen: (screen: "start" | "location") => void;
+  setScreen: (screen: StartScreen) => void;
 };
 
 export default function Name({ setScreen, name, setName }: NameProps) {
@@ -18,7 +20,6 @@ export default function Name({ setScreen, name, setName }: NameProps) {
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="border border-gray-300 rounded-md p-2"
         autoFocus
       />
       <Button

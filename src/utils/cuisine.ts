@@ -1,7 +1,7 @@
 import { CUISINES } from "@/utils/constants";
 
 const getFilteredCuisines = (
-  cuisines: string[]
+  cuisines: string[],
 ): (typeof CUISINES)[number][] => {
   return CUISINES.filter((cuisine) => !cuisines.includes(cuisine.id));
 };

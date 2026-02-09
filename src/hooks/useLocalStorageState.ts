@@ -33,7 +33,8 @@ export default function useLocalStorageState<T>(
     } finally {
       setIsInitialized(true);
     }
-  }, [key, initialValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   // Update localStorage when state changes (but not during initial hydration)
   useEffect(() => {

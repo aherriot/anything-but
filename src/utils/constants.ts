@@ -40,16 +40,3 @@ export const CUISINES = [
   { name: "Vegetarian", id: "vegetarian_restaurant" },
   { name: "Vietnamese", id: "vietnamese_restaurant" },
 ] as const;
-
-export const DIETS = [
-  { name: "Vegetarian", id: "10665" },
-  { name: "Vegan", id: "10697" },
-  { name: "Halal", id: "10751" },
-  { name: "Kosher", id: "10768" },
-] as const;
-
-export const PRICES = [
-  { name: "$", id: "10953" },
-  { name: "$$", id: "10955" },
-  { name: "$$$", id: "10954" },
-] as const;

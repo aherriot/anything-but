@@ -5,7 +5,7 @@ import { use } from "react";
 import Link from "next/link";
 
 import db from "@/utils/db";
-import { Restriction } from "@/types";
+import type { Restriction } from "@/types";
 import Header from "@/components/ui/header";
 import RestaurantList from "./RestaurantList";
 import { usePlaceDetails } from "@/hooks/usePlaceDetails";
@@ -39,38 +39,59 @@ export default function Group({
   } = usePlaceDetails(group?.placeId);
 
   if (!guestId) {
-    return <div>No guestId found</div>;
-  }
-
-  if (isLoading || isPlaceLoading) {
     return (
-      <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
-        <div>Loading...</div>
+        <div className="text-center text-neutral-400">Loading...</div>
       </div>
     );
   }
 
-  if (error) return <div>Error fetching data: {error.message}</div>;
+  if (isLoading || isPlaceLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-900">
+        <Header showInvite />
+        <div className="text-center text-neutral-400">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-neutral-900">
+        <Header showInvite />
+        <div className="text-center text-error">
+          Error fetching data: {error.message}
+        </div>
+      </div>
+    );
+  }
 
   if (!group) {
-    return <div>Group not found</div>;
+    return (
+      <div className="min-h-screen bg-neutral-900">
+        <Header showInvite />
+        <div className="text-center text-neutral-400">Group not found</div>
+      </div>
+    );
   }
 
   if (placeError) {
     return (
-      <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
-        <div>Error loading location: {placeError}</div>
+        <div className="text-center text-error">
+          Error loading location: {placeError}
+        </div>
       </div>
     );
   }
 
   if (!geo) {
     return (
-      <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
-        <div>Location not found</div>
+        <div className="text-center text-neutral-400">Location not found</div>
       </div>
     );
   }
@@ -91,9 +112,9 @@ export default function Group({
   const locationName = `${geo.city}, ${geo.region}`;
 
   return (
-    <div className="items-center text-white justify-items-center min-h-screen gap-16 bg-neutral-50">
+    <div className="min-h-screen bg-neutral-900">
       <Header showInvite />
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+      <main className="max-w-4xl mx-auto flex flex-col gap-8 px-4">
         <div className="w-full">
           <RestaurantList
             location={locationName}
@@ -105,7 +126,7 @@ export default function Group({
 
         <Link
           href={`/groups/${groupId}`}
-          className="text-blue-600 hover:text-blue-800"
+          className="text-primary-500 hover:text-primary-600 font-medium"
         >
           ← Back to restrictions
         </Link>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export type Location = {
   placeId: string;
@@ -15,56 +15,62 @@ export const useLocationSearch = (query: string, debounceMs: number = 300) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const searchLocations = useCallback(async (searchQuery: string) => {
-    if (!searchQuery || searchQuery.trim().length === 0) {
+  useEffect(() => {
+    if (!query || query.trim().length === 0) {
       setLocations([]);
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    const timerId = setTimeout(async () => {
+      // Cancel any previous in-flight request
+      abortControllerRef.current?.abort();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
-    try {
-      const params = new URLSearchParams();
-      params.append("query", searchQuery);
+      setIsLoading(true);
+      setError(null);
 
-      const response = await fetch(
-        `/api/places/autocomplete?${params.toString()}`,
-      );
+      try {
+        const params = new URLSearchParams();
+        params.append("query", query);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await fetch(
+          `/api/places/autocomplete?${params.toString()}`,
+          { signal: abortController.signal },
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result: LocationSearchResponse = await response.json();
+
+        if (result.success) {
+          setLocations(result.data);
+        } else {
+          throw new Error(result.error || "Failed to fetch locations");
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        const errorMessage =
+          err instanceof Error ? err.message : "An unexpected error occurred";
+        setError(errorMessage);
+        setLocations([]);
+      } finally {
+        setIsLoading(false);
       }
-
-      const result: LocationSearchResponse = await response.json();
-
-      if (result.success) {
-        setLocations(result.data);
-      } else {
-        throw new Error(result.error || "Failed to fetch locations");
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "An unexpected error occurred";
-      setError(errorMessage);
-      console.error("Error searching locations:", err);
-      setLocations([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timerId = setTimeout(() => {
-      searchLocations(query);
     }, debounceMs);
 
     return () => {
       clearTimeout(timerId);
+      abortControllerRef.current?.abort();
     };
-  }, [query, debounceMs, searchLocations]);
+  }, [query, debounceMs]);
 
   return {
     locations,

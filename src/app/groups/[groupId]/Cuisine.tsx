@@ -1,17 +1,11 @@
 "use client";
 
 import { CUISINES } from "@/utils/constants";
-import { PersonalRestriction } from "@/types";
+import type { PersonalRestriction, ExcludedCuisine } from "@/types";
 import toggleRestriction from "../toggleRestriction";
 import { Button } from "@/components/ui/button";
 import { CheckboxListItem } from "@/components/ui/checkbox-list-item";
 import Link from "next/link";
-
-type ExcludedCuisine = {
-  id: string;
-  guestId: string;
-  cuisineId: string;
-};
 
 type CuisineProps = {
   guestId: string;

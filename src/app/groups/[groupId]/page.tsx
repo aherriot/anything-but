@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { Screen } from "@/types";
+import type { GroupScreen } from "@/types";
 import useLocalStorageState from "@/hooks/useLocalStorageState";
 import { usePlaceDetails } from "@/hooks/usePlaceDetails";
 
@@ -19,7 +19,7 @@ export default function Groups({
   const guestId = db.useLocalId("guest");
 
   const [name, setName] = useLocalStorageState<string>("name", "");
-  const [screen, setScreen] = useState<Screen>("name");
+  const [screen, setScreen] = useState<GroupScreen>("name");
 
   const { isLoading, error, data } = db.useQuery({
     groups: {
@@ -43,7 +43,7 @@ export default function Groups({
 
   if (!guestId) {
     return (
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
         Loading
       </div>
@@ -52,7 +52,7 @@ export default function Groups({
 
   if (isLoading || isPlaceLoading) {
     return (
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
         <div>Loading...</div>
       </div>
@@ -67,7 +67,7 @@ export default function Groups({
 
   if (placeError) {
     return (
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
         <div>Error loading location: {placeError}</div>
       </div>
@@ -76,28 +76,15 @@ export default function Groups({
 
   if (!geo) {
     return (
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
         <div>Location not found</div>
       </div>
     );
   }
 
-  // const {
-  //   user,
-  //   peers,
-  //   publishPresence,
-  //   isLoading: isUserLoading,
-  // } = db.rooms.usePresence(room, {
-  //   initialData: { name: guestId ?? "" },
-  // });
-
-  // useEffect(() => {
-  //   publishPresence({ name: "andrew" });
-  // }, [guestId, publishPresence]);
-
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-900">
       <Header showInvite />
       <div className="max-w-3xl mx-auto flex flex-col gap-8">
         {screen === "name" && (
