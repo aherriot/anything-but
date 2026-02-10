@@ -1,29 +1,67 @@
+// Docs: https://www.instantdb.com/docs/modeling-data
+
 import { i } from "@instantdb/react";
 
 const _schema = i.schema({
   entities: {
+    $files: i.entity({
+      path: i.string().unique().indexed(),
+      url: i.string(),
+    }),
     $users: i.entity({
-      name: i.string(),
+      email: i.string().unique().indexed().optional(),
+      imageURL: i.string().optional(),
+      name: i.string().optional(),
+      type: i.string().optional(),
+    }),
+    excludedCuisines: i.entity({
+      cuisineId: i.string(),
+      guestId: i.string(),
     }),
     groups: i.entity({
+      createdAt: i.date(),
       name: i.string(),
       ownerId: i.string(),
       placeId: i.string(),
-      createdAt: i.date(),
-    }),
-    excludedCuisines: i.entity({
-      // The ID of the guest this restriction belongs to
-      guestId: i.string(),
-      /**
-       * The ID of the cuisine that is excluded
-       */
-      cuisineId: i.string(),
     }),
   },
   links: {
-    groupRestrictions: {
-      forward: { on: "excludedCuisines", has: "one", label: "group" },
-      reverse: { on: "groups", has: "many", label: "excludedCuisines" },
+    $usersLinkedPrimaryUser: {
+      forward: {
+        on: "$users",
+        has: "one",
+        label: "linkedPrimaryUser",
+        onDelete: "cascade",
+      },
+      reverse: {
+        on: "$users",
+        has: "many",
+        label: "linkedGuestUsers",
+      },
+    },
+    excludedCuisinesGroup: {
+      forward: {
+        on: "excludedCuisines",
+        has: "one",
+        label: "group",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "excludedCuisines",
+      },
+    },
+    groupsGuests: {
+      forward: {
+        on: "groups",
+        has: "many",
+        label: "guests",
+      },
+      reverse: {
+        on: "$users",
+        has: "many",
+        label: "groups",
+      },
     },
   },
   rooms: {
@@ -35,9 +73,8 @@ const _schema = i.schema({
   },
 });
 
-// This helps Typescript display better intellisense
+// This helps TypeScript display nicer intellisense
 type _AppSchema = typeof _schema;
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface AppSchema extends _AppSchema {}
 const schema: AppSchema = _schema;
 

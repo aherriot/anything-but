@@ -8,6 +8,7 @@ import db from "@/utils/db";
 import type { Restriction } from "@/types";
 import Header from "@/components/ui/header";
 import RestaurantList from "./RestaurantList";
+import GuestPanel from "./GuestPanel";
 import { usePlaceDetails } from "@/hooks/usePlaceDetails";
 
 export default function Group({
@@ -27,6 +28,7 @@ export default function Group({
         limit: 1,
       },
       excludedCuisines: {},
+      guests: {},
     },
   });
 
@@ -131,6 +133,7 @@ export default function Group({
           ← Back to restrictions
         </Link>
       </main>
+      <GuestPanel group={group} />
     </div>
   );
 }

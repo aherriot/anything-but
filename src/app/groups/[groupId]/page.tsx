@@ -24,24 +24,30 @@ export default function Groups({
     }
   }, [isAuthLoading, user]);
 
+  const { isLoading, error, data } = db.useQuery({
+    groups: {
+      $: { where: { id: groupId }, limit: 1 },
+      excludedCuisines: {},
+      guests: {},
+    },
+  });
+
   // Query the current user's name from $users
   const { isLoading: isUserLoading, data: userData } = db.useQuery(
     user ? { $users: { $: { where: { id: user.id }, limit: 1 } } } : null,
   );
 
-  const name = userData?.$users?.[0]?.name ?? "";
+  const isAlreadyLinked =
+    user &&
+    data?.groups?.[0]?.guests.find((guest) => guest.id === user.id) != null;
 
-  const { isLoading, error, data } = db.useQuery({
-    groups: {
-      $: {
-        where: {
-          id: groupId,
-        },
-        limit: 1,
-      },
-      excludedCuisines: {},
-    },
-  });
+  useEffect(() => {
+    if (user && groupId && !isAlreadyLinked) {
+      db.transact(db.tx.groups[groupId].link({ guests: user.id }));
+    }
+  }, [user, groupId, isAlreadyLinked]);
+
+  const name = userData?.$users?.[0]?.name ?? "";
 
   const group = data?.groups?.[0];
 
