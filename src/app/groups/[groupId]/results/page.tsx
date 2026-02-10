@@ -16,7 +16,7 @@ export default function Group({
   params: Promise<{ groupId: string }>;
 }) {
   const { groupId } = use(params);
-  const guestId = db.useLocalId("guest");
+  const { user } = db.useAuth();
 
   const { isLoading, error, data } = db.useQuery({
     groups: {
@@ -38,7 +38,7 @@ export default function Group({
     error: placeError,
   } = usePlaceDetails(group?.placeId);
 
-  if (!guestId) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header showInvite />

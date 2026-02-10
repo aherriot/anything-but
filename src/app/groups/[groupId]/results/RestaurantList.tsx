@@ -25,7 +25,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
       <div className="flex-1">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-xl font-semibold text-neutral-100">
+            <h3 className="text-xl font-semibold text-neutral-900">
               {restaurant.name}
             </h3>
             <p className="text-sm text-neutral-400">{restaurant.cuisine}</p>

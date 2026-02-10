@@ -7,35 +7,33 @@ import LocationCombobox from "@/components/LocationCombobox";
 import type { Location } from "@/hooks/useLocationSearch";
 import db from "@/utils/db";
 
-import type { StartScreen } from "@/types";
-
 type LocationProps = {
   name: string;
-  setScreen: (screen: StartScreen) => void;
+  setChangeName: (change: boolean) => void;
 };
 
-async function createGroup(name: string, location: Location) {
-  const localId = await db.getLocalId("guest");
-  if (!localId) {
-    throw new Error("No local ID found");
-  }
-  const newGroupId = id();
-  await db.transact(
-    db.tx.groups[newGroupId].update({
-      name,
-      createdAt: JSON.stringify(new Date()),
-      ownerId: localId,
-      placeId: location.placeId,
-    }),
-  );
-
-  redirect(`/groups/${newGroupId}`);
-}
-
-export default function Location({ setScreen, name }: LocationProps) {
+export default function Location({ name, setChangeName }: LocationProps) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     null,
   );
+
+  const { user } = db.useAuth();
+
+  const handleCreateGroup = async (location: Location) => {
+    if (!user) return;
+
+    const newGroupId = id();
+    await db.transact(
+      db.tx.groups[newGroupId].update({
+        name,
+        createdAt: JSON.stringify(new Date()),
+        ownerId: user.id,
+        placeId: location.placeId,
+      }),
+    );
+
+    redirect(`/groups/${newGroupId}`);
+  };
 
   return (
     <div className="flex flex-col gap-4 row-start-2 items-center sm:items-start">
@@ -49,12 +47,12 @@ export default function Location({ setScreen, name }: LocationProps) {
         autoFocus
       />
       <div className="flex gap-4 mt-4">
-        <Button variant="outline" onClick={() => setScreen("start")}>
-          Back
+        <Button variant="outline" onClick={() => setChangeName(true)}>
+          Change name
         </Button>
         <Button
           onClick={() =>
-            selectedLocation && createGroup(name, selectedLocation)
+            selectedLocation && handleCreateGroup(selectedLocation)
           }
           disabled={!selectedLocation}
         >

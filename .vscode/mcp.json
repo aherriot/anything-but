@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"instantdb": {
+			"url": "https://mcp.instantdb.com/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

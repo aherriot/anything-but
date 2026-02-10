@@ -2,6 +2,9 @@ import { i } from "@instantdb/react";
 
 const _schema = i.schema({
   entities: {
+    $users: i.entity({
+      name: i.string(),
+    }),
     groups: i.entity({
       name: i.string(),
       ownerId: i.string(),

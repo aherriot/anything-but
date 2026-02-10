@@ -23,6 +23,12 @@ const rules = {
       delete: "data.guestId == auth.guest",
     },
   },
+  $users: {
+    allow: {
+      view: "true",
+      update: "data.id == auth.id",
+    },
+  },
 } satisfies InstantRules;
 
 export default rules;

@@ -1,7 +1,3 @@
-export type GroupScreen = "name" | "cuisine" | "diet" | "price";
-
-export type StartScreen = "start" | "location";
-
 export type Restriction = {
   cuisineId: string;
   restrictionId: string;

@@ -1,14 +1,12 @@
 "use client";
 
-import { use, useState } from "react";
-import type { GroupScreen } from "@/types";
-import useLocalStorageState from "@/hooks/useLocalStorageState";
+import { use, useEffect, useState } from "react";
 import { usePlaceDetails } from "@/hooks/usePlaceDetails";
 
-import Name from "./Name";
 import Cuisine from "./Cuisine";
 import db from "@/utils/db";
 import Header from "@/components/ui/header";
+import Name from "@/components/Name";
 
 export default function Groups({
   params,
@@ -16,10 +14,22 @@ export default function Groups({
   params: Promise<{ groupId: string }>;
 }) {
   const { groupId } = use(params);
-  const guestId = db.useLocalId("guest");
+  const { isLoading: isAuthLoading, user } = db.useAuth();
+  const [changeName, setChangeName] = useState(false);
 
-  const [name, setName] = useLocalStorageState<string>("name", "");
-  const [screen, setScreen] = useState<GroupScreen>("name");
+  // Sign in as guest automatically if not authenticated
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      db.auth.signInAsGuest();
+    }
+  }, [isAuthLoading, user]);
+
+  // Query the current user's name from $users
+  const { isLoading: isUserLoading, data: userData } = db.useQuery(
+    user ? { $users: { $: { where: { id: user.id }, limit: 1 } } } : null,
+  );
+
+  const name = userData?.$users?.[0]?.name ?? "";
 
   const { isLoading, error, data } = db.useQuery({
     groups: {
@@ -41,16 +51,16 @@ export default function Groups({
     error: placeError,
   } = usePlaceDetails(group?.placeId);
 
-  if (!guestId) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
-        Loading
+        <div className="text-center text-neutral-400">Loading...</div>
       </div>
     );
   }
 
-  if (isLoading || isPlaceLoading) {
+  if (isLoading || isPlaceLoading || isAuthLoading || isUserLoading || !user) {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
@@ -83,26 +93,30 @@ export default function Groups({
     );
   }
 
+  if (!name || changeName) {
+    return (
+      <div className="min-h-screen max-w-2xl m-auto p-8 bg-neutral-900">
+        <h1 className="text-4xl font-bold text-neutral-500 px-4 text-center max-w-2xl">
+          Choose a restaurant
+          <br />
+          with <span className="text-neutral-100">{group.name}</span>
+          <br />
+          in <span className="text-neutral-100">{geo.name}</span>
+        </h1>
+        <Name name={name} setChangeName={setChangeName} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-900">
       <Header showInvite />
       <div className="max-w-3xl mx-auto flex flex-col gap-8">
-        {screen === "name" && (
-          <Name
-            setScreen={setScreen}
-            name={name}
-            setName={setName}
-            groupName={group.name}
-            geoName={`${geo.city}, ${geo.region}`}
-          />
-        )}
-        {screen === "cuisine" && (
-          <Cuisine
-            guestId={guestId}
-            groupId={groupId}
-            excludedCuisines={group.excludedCuisines}
-          />
-        )}
+        <Cuisine
+          guestId={user.id}
+          groupId={groupId}
+          excludedCuisines={group.excludedCuisines}
+        />
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ function Header({ className, showInvite, ...props }: HeaderProps) {
               viewBox={`0 0 256 256`}
             />
           </div>
-          <p className="text-center mt-4 font-semibold text-lg text-neutral-600">
+          <p className="text-center mt-4 font-semibold text-lg text-neutral-400">
             Collaboratively choose a restaurant
           </p>
           <button
