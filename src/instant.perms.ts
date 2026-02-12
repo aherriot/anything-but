@@ -12,13 +12,18 @@ const rules = {
       delete: "data.ownerId == auth.id",
     },
   },
-  excludedCuisines: {
+  cachedRestaurants: {
     allow: {
-      // Anyone in the group can view restrictions
       view: "true",
-      // Anyone can create their own restriction
       create: "true",
-      // Only the guest who created the restriction can update/delete it
+      update: "true",
+      delete: "true",
+    },
+  },
+  restaurantVotes: {
+    allow: {
+      view: "true",
+      create: "auth.id != null",
       update: "data.guestId == auth.id",
       delete: "data.guestId == auth.id",
     },

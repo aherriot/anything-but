@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import type { Restaurant, RestaurantApiResponse } from "@/types";
+import type { RestaurantApiResponse } from "@/types";
 
 type UseRestaurantsParams = {
   cuisines?: string[];

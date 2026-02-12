@@ -1,12 +1,12 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { usePlaceDetails } from "@/hooks/usePlaceDetails";
 
-import Cuisine from "./Cuisine";
+import RestaurantSwipe from "./RestaurantSwipe";
 import db from "@/utils/db";
-import Header from "@/components/ui/header";
+import Header from "@/components/Header";
 import Name from "@/components/Name";
+import GuestPanel from "./GuestPanel";
 
 export default function Groups({
   params,
@@ -27,8 +27,11 @@ export default function Groups({
   const { isLoading, error, data } = db.useQuery({
     groups: {
       $: { where: { id: groupId }, limit: 1 },
-      excludedCuisines: {},
       guests: {},
+      cachedRestaurants: {
+        votes: {},
+      },
+      restaurantVotes: {},
     },
   });
 
@@ -51,12 +54,6 @@ export default function Groups({
 
   const group = data?.groups?.[0];
 
-  const {
-    placeDetails: geo,
-    isLoading: isPlaceLoading,
-    error: placeError,
-  } = usePlaceDetails(group?.placeId);
-
   if (!user) {
     return (
       <div className="min-h-screen bg-neutral-900">
@@ -66,7 +63,7 @@ export default function Groups({
     );
   }
 
-  if (isLoading || isPlaceLoading || isAuthLoading || isUserLoading || !user) {
+  if (isLoading || isAuthLoading || isUserLoading || !user) {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
@@ -81,16 +78,7 @@ export default function Groups({
     return <div>Group not found</div>;
   }
 
-  if (placeError) {
-    return (
-      <div className="min-h-screen bg-neutral-900">
-        <Header showInvite />
-        <div>Error loading location: {placeError}</div>
-      </div>
-    );
-  }
-
-  if (!geo) {
+  if (!group.placeId) {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
@@ -107,23 +95,44 @@ export default function Groups({
           <br />
           with <span className="text-neutral-100">{group.name}</span>
           <br />
-          in <span className="text-neutral-100">{geo.name}</span>
+          in <span className="text-neutral-100">{group.placeName}</span>
         </h1>
         <Name name={name} setChangeName={setChangeName} />
       </div>
     );
   }
 
+  // Map cachedRestaurants to include their votes
+  const restaurantsWithVotes = (group.cachedRestaurants ?? []).map((r) => ({
+    ...r,
+    rating: r.rating ?? undefined,
+    address: r.address ?? undefined,
+    phone: r.phone ?? undefined,
+    description: r.description ?? undefined,
+    photoUrl: r.photoUrl ?? undefined,
+    votes: (r.votes ?? []).map((v) => ({
+      ...v,
+      vote: v.vote as "yes" | "no_restaurant" | "no_cuisine",
+    })),
+  }));
+
+  // Flatten all votes from all restaurants
+  const allVotes = restaurantsWithVotes.flatMap((r) => r.votes);
+
   return (
     <div className="min-h-screen bg-neutral-900">
       <Header showInvite />
-      <div className="max-w-3xl mx-auto flex flex-col gap-8">
-        <Cuisine
-          guestId={user.id}
+      <div className="max-w-3xl mx-auto flex flex-col gap-8 px-4 pb-24">
+        <RestaurantSwipe
           groupId={groupId}
-          excludedCuisines={group.excludedCuisines}
+          guestId={user.id}
+          guests={group.guests.map((g) => ({ id: g.id, name: g.name }))}
+          cachedRestaurants={restaurantsWithVotes}
+          allVotes={allVotes}
+          fetchStatus={group.fetchStatus ?? undefined}
         />
       </div>
+      <GuestPanel group={group} allVotes={allVotes} />
     </div>
   );
 }

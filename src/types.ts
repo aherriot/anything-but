@@ -50,3 +50,25 @@ export type ToggleRestrictionParams = {
   cuisineId: string;
   isChecked: boolean;
 };
+
+export type CachedRestaurant = {
+  id: string;
+  googlePlaceId: string;
+  name: string;
+  rating?: string;
+  priceRange: string;
+  address?: string;
+  phone?: string;
+  description?: string;
+  website: string;
+  type: string;
+  photoUrl?: string;
+  votes: RestaurantVote[];
+};
+
+export type RestaurantVote = {
+  id: string;
+  guestId: string;
+  vote: "yes" | "no_restaurant" | "no_cuisine";
+  votedAt: string;
+};

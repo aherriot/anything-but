@@ -14,15 +14,31 @@ const _schema = i.schema({
       name: i.string().optional(),
       type: i.string().optional(),
     }),
-    excludedCuisines: i.entity({
-      cuisineId: i.string(),
-      guestId: i.string(),
-    }),
     groups: i.entity({
       createdAt: i.date(),
       name: i.string(),
       ownerId: i.string(),
       placeId: i.string(),
+      placeName: i.string(),
+      nextPageToken: i.string().optional(),
+      fetchStatus: i.string().optional(), // "fetching" | "ready" | "exhausted"
+    }),
+    cachedRestaurants: i.entity({
+      googlePlaceId: i.string(),
+      name: i.string(),
+      rating: i.string().optional(),
+      priceRange: i.string(),
+      address: i.string().optional(),
+      phone: i.string().optional(),
+      description: i.string().optional(),
+      website: i.string(),
+      type: i.string(), // Google Places primaryType e.g. "italian_restaurant"
+      photoUrl: i.string().optional(),
+    }),
+    restaurantVotes: i.entity({
+      guestId: i.string(),
+      vote: i.string(), // "yes" | "no_restaurant" | "no_cuisine"
+      votedAt: i.string(),
     }),
   },
   links: {
@@ -39,18 +55,6 @@ const _schema = i.schema({
         label: "linkedGuestUsers",
       },
     },
-    excludedCuisinesGroup: {
-      forward: {
-        on: "excludedCuisines",
-        has: "one",
-        label: "group",
-      },
-      reverse: {
-        on: "groups",
-        has: "many",
-        label: "excludedCuisines",
-      },
-    },
     groupsGuests: {
       forward: {
         on: "groups",
@@ -61,6 +65,42 @@ const _schema = i.schema({
         on: "$users",
         has: "many",
         label: "groups",
+      },
+    },
+    cachedRestaurantsGroup: {
+      forward: {
+        on: "cachedRestaurants",
+        has: "one",
+        label: "group",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "cachedRestaurants",
+      },
+    },
+    restaurantVotesGroup: {
+      forward: {
+        on: "restaurantVotes",
+        has: "one",
+        label: "group",
+      },
+      reverse: {
+        on: "groups",
+        has: "many",
+        label: "restaurantVotes",
+      },
+    },
+    restaurantVotesCachedRestaurant: {
+      forward: {
+        on: "restaurantVotes",
+        has: "one",
+        label: "restaurant",
+      },
+      reverse: {
+        on: "cachedRestaurants",
+        has: "many",
+        label: "votes",
       },
     },
   },
@@ -75,6 +115,7 @@ const _schema = i.schema({
 
 // This helps TypeScript display nicer intellisense
 type _AppSchema = typeof _schema;
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface AppSchema extends _AppSchema {}
 const schema: AppSchema = _schema;
 

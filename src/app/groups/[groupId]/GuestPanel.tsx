@@ -1,11 +1,13 @@
 "use client";
 
+import { RestaurantVote } from "@/types";
 import { useState } from "react";
 
 type GuestSummary = {
   id: string;
   name: string;
-  excludedCount: number;
+  excludedRestaurantsCount: number;
+  excludedCuisinesCount: number;
 };
 
 type GuestPanelProps = {
@@ -15,11 +17,6 @@ type GuestPanelProps = {
     createdAt: string | number;
     ownerId: string;
     placeId: string;
-    excludedCuisines: {
-      id: string;
-      guestId: string;
-      cuisineId: string;
-    }[];
     guests: {
       id: string;
       name?: string | undefined;
@@ -28,21 +25,30 @@ type GuestPanelProps = {
       type?: string | undefined;
     }[];
   };
+  allVotes: RestaurantVote[];
 };
 
-export default function GuestPanel({ group }: GuestPanelProps) {
+export default function GuestPanel({ group, allVotes }: GuestPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const excludedCuisines = group?.excludedCuisines ?? [];
+  // const excludedCuisines = group?.excludedCuisines ?? [];
   const linkedGuests = group?.guests ?? [];
 
-  // Build a map of guestId -> count of excluded cuisines
-  const exclusionsByGuest = new Map<string, number>();
-  for (const ec of excludedCuisines) {
-    exclusionsByGuest.set(
-      ec.guestId,
-      (exclusionsByGuest.get(ec.guestId) ?? 0) + 1,
-    );
+  // Build a map of guestId -> count of excluded restaurants and cuisines
+  const exclusedRestaurantsByGuest = new Map<string, number>();
+  const excludedCuisinesByGuest = new Map<string, number>();
+  for (const vote of allVotes) {
+    if (vote.vote === "no_restaurant") {
+      exclusedRestaurantsByGuest.set(
+        vote.guestId,
+        (exclusedRestaurantsByGuest.get(vote.guestId) ?? 0) + 1,
+      );
+    } else if (vote.vote === "no_cuisine") {
+      excludedCuisinesByGuest.set(
+        vote.guestId,
+        (excludedCuisinesByGuest.get(vote.guestId) ?? 0) + 1,
+      );
+    }
   }
 
   // Build guest summaries from linked guests
@@ -50,7 +56,8 @@ export default function GuestPanel({ group }: GuestPanelProps) {
     .map((guest) => ({
       id: guest.id,
       name: guest.name || "Anonymous",
-      excludedCount: exclusionsByGuest.get(guest.id) ?? 0,
+      excludedRestaurantsCount: exclusedRestaurantsByGuest.get(guest.id) ?? 0,
+      excludedCuisinesCount: excludedCuisinesByGuest.get(guest.id) ?? 0,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -102,8 +109,19 @@ export default function GuestPanel({ group }: GuestPanelProps) {
                       {guest.name}
                     </span>
                     <span className="text-xs text-neutral-400 bg-neutral-700 rounded-full px-2.5 py-0.5">
-                      {guest.excludedCount}{" "}
-                      {guest.excludedCount === 1 ? "cuisine" : "cuisines"}{" "}
+                      <span className="text-neutral-300">
+                        {guest.excludedRestaurantsCount}
+                      </span>{" "}
+                      {guest.excludedRestaurantsCount === 1
+                        ? "restaurant "
+                        : "restaurants "}
+                      excluded and{" "}
+                      <span className="text-neutral-300">
+                        {guest.excludedCuisinesCount}
+                      </span>{" "}
+                      {guest.excludedCuisinesCount === 1
+                        ? "cuisine "
+                        : "cuisines "}
                       excluded
                     </span>
                   </li>

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { id } from "@instantdb/react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/Button";
 import LocationCombobox from "@/components/LocationCombobox";
 import type { Location } from "@/hooks/useLocationSearch";
 import db from "@/utils/db";
@@ -16,6 +16,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     null,
   );
+  const router = useRouter();
 
   const { user } = db.useAuth();
 
@@ -29,10 +30,19 @@ export default function Location({ name, setChangeName }: LocationProps) {
         createdAt: JSON.stringify(new Date()),
         ownerId: user.id,
         placeId: location.placeId,
+        placeName: location.text,
+        fetchStatus: "ready",
       }),
     );
 
-    redirect(`/groups/${newGroupId}`);
+    // Trigger restaurant prefetch in the background (fire and forget)
+    fetch(`/api/groups/${newGroupId}/prefetch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }).catch((err) => console.error("Failed to trigger prefetch:", err));
+
+    router.push(`/groups/${newGroupId}`);
   };
 
   return (
