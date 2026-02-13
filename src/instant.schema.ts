@@ -72,6 +72,7 @@ const _schema = i.schema({
         on: "cachedRestaurants",
         has: "one",
         label: "group",
+        onDelete: "cascade",
       },
       reverse: {
         on: "groups",
@@ -84,6 +85,7 @@ const _schema = i.schema({
         on: "restaurantVotes",
         has: "one",
         label: "group",
+        onDelete: "cascade",
       },
       reverse: {
         on: "groups",
@@ -96,6 +98,7 @@ const _schema = i.schema({
         on: "restaurantVotes",
         has: "one",
         label: "restaurant",
+        onDelete: "cascade",
       },
       reverse: {
         on: "cachedRestaurants",
