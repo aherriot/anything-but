@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { id as instantId } from "@instantdb/admin";
 import adminDb from "@/utils/db-admin";
+import { CUISINE_MAP } from "@/utils/constants";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_TEXT_SEARCH_URL =
@@ -14,6 +15,7 @@ const GOOGLE_SEARCH_FIELD_MASK = [
   "places.userRatingCount",
   "places.priceLevel",
   "places.primaryType",
+  "places.types",
   "places.nationalPhoneNumber",
   "places.websiteUri",
   "places.editorialSummary",
@@ -41,6 +43,7 @@ type GooglePlace = {
   userRatingCount?: number;
   priceLevel?: string;
   primaryType?: string;
+  types?: string[];
   nationalPhoneNumber?: string;
   websiteUri?: string;
   editorialSummary?: {
@@ -230,6 +233,13 @@ export async function POST(
     for (const place of places) {
       if (existingIds.has(place.id)) continue;
 
+      let resolvedType = place.primaryType;
+      // If primaryType is missing or not in our cuisine map, try to find a suitable type from the types array
+      if (!place.primaryType || !CUISINE_MAP[place.primaryType]) {
+        resolvedType =
+          place.types?.find((t) => CUISINE_MAP[t]) || "generic_restaurant";
+      }
+
       const restaurantId = instantId();
       transactions.push(
         adminDb.tx.cachedRestaurants[restaurantId]
@@ -242,7 +252,7 @@ export async function POST(
             phone: place.nationalPhoneNumber ?? undefined,
             description: place.editorialSummary?.text ?? undefined,
             website: place.websiteUri || "#",
-            type: place.primaryType || "restaurant",
+            type: resolvedType,
             photoUrl:
               place.photos && place.photos.length > 0
                 ? place.photos[0].name

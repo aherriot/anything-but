@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import { id } from "@instantdb/react";
-import { CUISINES } from "@/utils/constants";
+import { CUISINE_MAP } from "@/utils/constants";
 import { Button } from "@/components/Button";
 import db from "@/utils/db";
 import type { CachedRestaurant, RestaurantVote } from "@/types";
@@ -17,14 +17,20 @@ type RestaurantSwipeProps = {
 };
 
 function getCuisineName(type: string): string {
-  const cuisine = CUISINES.find((c) => c.id === type);
-  return (
-    cuisine?.name ??
-    type
-      .replace(/_/g, " ")
-      .replace(/restaurant$/i, "")
-      .trim()
-  );
+  if (
+    [
+      "pub",
+      "diner",
+      "bar",
+      "coffee_shop",
+      "steak_house",
+      "bar_and_grill",
+    ].includes(type)
+  ) {
+    return "a " + CUISINE_MAP[type];
+  } else {
+    return CUISINE_MAP[type];
+  }
 }
 
 export default function RestaurantSwipe({
@@ -241,10 +247,10 @@ export default function RestaurantSwipe({
         const restaurant = cachedRestaurants.find((r) => r.id === restaurantId);
 
         if (vote.vote === "no_restaurant" && restaurant) {
-          rejectedRestaurants.push(restaurant.name);
+          rejectedRestaurants.push(`${restaurant.name} (${restaurant.id})`);
         }
         if (vote.vote === "no_cuisine" && restaurant) {
-          const cuisineName = getCuisineName(restaurant.type);
+          const cuisineName = CUISINE_MAP[restaurant.type];
           if (!rejectedCuisines.includes(cuisineName)) {
             rejectedCuisines.push(cuisineName);
           }
@@ -344,7 +350,6 @@ export default function RestaurantSwipe({
   }
 
   // SWIPE VIEW
-  const cuisineName = getCuisineName(nextRestaurant.type);
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -372,14 +377,16 @@ export default function RestaurantSwipe({
         >
           ✗ No, I don&apos;t like this restaurant
         </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          fullWidth
-          onClick={() => handleVote(nextRestaurant.id, "no_cuisine")}
-        >
-          ✗ No, I don&apos;t want {cuisineName}
-        </Button>
+        {nextRestaurant.type !== "generic_restaurant" && (
+          <Button
+            variant="outline"
+            size="lg"
+            fullWidth
+            onClick={() => handleVote(nextRestaurant.id, "no_cuisine")}
+          >
+            ✗ No, I don&apos;t want {getCuisineName(nextRestaurant.type)}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -405,8 +412,6 @@ function RestaurantCard({
   restaurant: CachedRestaurant;
   featured?: boolean;
 }) {
-  const cuisineName = getCuisineName(restaurant.type);
-
   return (
     <div
       className={`bg-neutral-800 rounded-xl overflow-hidden ${featured ? "ring-2 ring-primary-500" : ""}`}
@@ -425,7 +430,9 @@ function RestaurantCard({
             <h3 className="text-xl font-semibold text-neutral-100">
               {restaurant.name}
             </h3>
-            <p className="text-sm text-neutral-400">{cuisineName}</p>
+            <p className="text-sm text-neutral-400">
+              {getCuisineName(restaurant.type)}
+            </p>
           </div>
           <div className="text-right flex-shrink-0 ml-4">
             {restaurant.rating && (
