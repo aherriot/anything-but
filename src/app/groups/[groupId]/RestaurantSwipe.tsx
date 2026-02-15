@@ -188,15 +188,36 @@ export default function RestaurantSwipe({
 
   // CONSENSUS VIEW
   if (consensusRestaurant) {
+    const isSoloGuest = guests.length === 1;
+
     return (
       <div className="max-w-full mx-auto text-center">
-        <div className="mb-6">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="heading-lg text-primary-300 mb-2">Everyone agrees!</h2>
-          <p className="text-neutral-400">
-            All {guests.length} guests want to eat here
-          </p>
-        </div>
+        {isSoloGuest ? (
+          <div className="mb-6 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
+            <div className="text-4xl mb-3">👋</div>
+            <h2 className="heading-lg text-primary-300 mb-2">
+              You&apos;re choosing solo!
+            </h2>
+            <p className="text-neutral-300 mb-1">
+              Invite friends to help pick a restaurant together.
+            </p>
+            <p className="text-neutral-400 text-sm">
+              Hit the{" "}
+              <span className="font-semibold text-primary-400">Invite</span>{" "}
+              button above to share a QR code.
+            </p>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <div className="text-5xl mb-4">🎉</div>
+            <h2 className="heading-lg text-primary-300 mb-2">
+              Everyone agrees!
+            </h2>
+            <p className="text-neutral-400">
+              All {guests.length} guests want to eat here
+            </p>
+          </div>
+        )}
 
         <RestaurantCard restaurant={consensusRestaurant} featured />
 
