@@ -39,14 +39,14 @@ export default function Home() {
 
         {/* Rotating excuses */}
         <div className="mb-8">
-          <p className="body-lg text-neutral-400 min-h-[2rem] transition-all duration-500 italic">
+          <p className="body-lg text-neutral-300 min-h-[2rem] transition-all duration-500 italic">
             &ldquo;{EXCUSES[currentExcuseIndex]}&rdquo;
           </p>
         </div>
 
         {/* Description */}
-        <p className="body-lg text-neutral-300 mb-10 max-w-xl mx-auto">
-          A collaborative restaurant choosing app for picky eaters.
+        <p className="body-lg text-neutral-200 mb-10 max-w-xl mx-auto">
+          Collaboratively choose a restaurant with your friends
         </p>
 
         {/* CTA Button */}
