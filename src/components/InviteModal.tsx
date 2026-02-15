@@ -5,11 +5,13 @@ import { Button } from "./Button";
 type InviteModalProps = {
   currentUrl: string;
   setShowingInviteQR: (showing: boolean) => void;
+  guestName?: string;
 };
 
 export default function InviteModal({
   currentUrl,
   setShowingInviteQR,
+  guestName,
 }: InviteModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -116,7 +118,10 @@ export default function InviteModal({
 
           {/* Tagline */}
           <p className="text-center mt-5 font-semibold text-lg text-neutral-400">
-            Collaboratively choose a restaurant
+            Choose a restaurant with{" "}
+            <span className="text-neutral-100">
+              {guestName ? guestName : "friends"}
+            </span>
           </p>
 
           {/* Action */}

@@ -9,10 +9,11 @@ import InviteModal from "./InviteModal";
 
 type HeaderProps = React.ComponentProps<"header"> & {
   showInvite: boolean;
+  guestName?: string;
   className?: string;
 };
 
-function Header({ className, showInvite, ...props }: HeaderProps) {
+function Header({ className, showInvite, guestName, ...props }: HeaderProps) {
   const [showingInviteQR, setShowingInviteQR] = React.useState(false);
   const [currentUrl, setCurrentUrl] = React.useState("");
 
@@ -43,6 +44,7 @@ function Header({ className, showInvite, ...props }: HeaderProps) {
         <InviteModal
           currentUrl={currentUrl}
           setShowingInviteQR={setShowingInviteQR}
+          guestName={guestName}
         />
       )}
     </header>

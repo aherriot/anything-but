@@ -123,7 +123,7 @@ export default function Groups({
 
   return (
     <div className="min-h-screen bg-neutral-900">
-      <Header showInvite />
+      <Header showInvite guestName={name} />
       <div className="w-2xl max-w-full mx-auto flex flex-col gap-8 px-4 pb-24">
         <RestaurantSwipe
           groupId={groupId}
