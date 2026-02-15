@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { id } from "@instantdb/react";
 import { CUISINE_MAP } from "@/utils/constants";
 import { Button } from "@/components/Button";
@@ -105,19 +105,21 @@ export default function RestaurantSwipe({
     return null;
   }, [cachedRestaurants, guests, votesByRestaurant]);
 
-  // Get the next restaurant to show the current guest
-  const nextRestaurant = useMemo(() => {
+  // Get the next restaurant candidate from the filtered list
+  const nextCandidate = useMemo(() => {
     if (consensusRestaurant) return null;
 
-    return cachedRestaurants.find((r) => {
-      // Skip if I already voted on it
-      if (myVotedIds.has(r.id)) return false;
-      // Skip if globally rejected (any guest said no to this restaurant)
-      if (rejectedRestaurantIds.has(r.id)) return false;
-      // Skip if cuisine is globally rejected
-      if (rejectedCuisineTypes.has(r.type)) return false;
-      return true;
-    });
+    return (
+      cachedRestaurants.find((r) => {
+        // Skip if I already voted on it
+        if (myVotedIds.has(r.id)) return false;
+        // Skip if globally rejected (any guest said no to this restaurant)
+        if (rejectedRestaurantIds.has(r.id)) return false;
+        // Skip if cuisine is globally rejected
+        if (rejectedCuisineTypes.has(r.type)) return false;
+        return true;
+      }) ?? null
+    );
   }, [
     cachedRestaurants,
     myVotedIds,
@@ -125,6 +127,23 @@ export default function RestaurantSwipe({
     rejectedCuisineTypes,
     consensusRestaurant,
   ]);
+
+  // Lock the displayed restaurant so it doesn't change from under the user
+  // when other guests vote. Only release when THIS user votes on it.
+  const lockedIdRef = useRef<string | null>(null);
+
+  const nextRestaurant = useMemo(() => {
+    const lid = lockedIdRef.current;
+    // Keep showing the locked restaurant until this user votes on it
+    if (lid && !myVotedIds.has(lid)) {
+      const locked = cachedRestaurants.find((r) => r.id === lid);
+      if (locked) return locked;
+    }
+    return nextCandidate;
+  }, [cachedRestaurants, myVotedIds, nextCandidate]);
+
+  // Sync the ref to the currently displayed restaurant (ref writes are safe during render)
+  lockedIdRef.current = nextRestaurant?.id ?? null;
 
   // Count remaining available restaurants (not rejected, not all voted on)
   const remainingCount = useMemo(() => {
@@ -174,6 +193,9 @@ export default function RestaurantSwipe({
     restaurantId: string,
     vote: "yes" | "no_restaurant" | "no_cuisine",
   ) => {
+    // Release the lock so the next candidate is shown after the vote
+    lockedIdRef.current = null;
+
     const voteId = id();
     await db.transact(
       db.tx.restaurantVotes[voteId]
