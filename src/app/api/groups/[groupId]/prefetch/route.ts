@@ -26,6 +26,9 @@ const GOOGLE_SEARCH_FIELD_MASK = [
 const BATCH_SIZE = 20;
 // const MIN_RESTAURANTS_THRESHOLD = 5;
 
+// In-memory lock to prevent concurrent prefetch calls for the same group
+const activePrefetches = new Set<string>();
+
 type GooglePlacePhoto = {
   name: string;
   widthPx: number;
@@ -151,6 +154,16 @@ export async function POST(
   { params }: { params: Promise<{ groupId: string }> },
 ) {
   const { groupId } = await params;
+
+  // Prevent concurrent prefetch calls for the same group
+  if (activePrefetches.has(groupId)) {
+    return NextResponse.json({
+      success: true,
+      data: { fetched: 0, message: "Prefetch already in progress" },
+    });
+  }
+
+  activePrefetches.add(groupId);
 
   try {
     if (!GOOGLE_API_KEY) {
@@ -305,6 +318,8 @@ export async function POST(
       },
       { status: 500 },
     );
+  } finally {
+    activePrefetches.delete(groupId);
   }
 }
 
