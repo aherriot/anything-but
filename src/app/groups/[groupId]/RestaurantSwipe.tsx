@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { id } from "@instantdb/react";
 import { CUISINE_MAP } from "@/utils/constants";
 import { Button } from "@/components/Button";
@@ -12,7 +12,7 @@ type RestaurantSwipeProps = {
   guestId: string;
   guests: { id: string; name?: string }[];
   cachedRestaurants: CachedRestaurant[];
-  allVotes: RestaurantVote[];
+  allVotes: (RestaurantVote & { restaurantId: string })[];
   fetchStatus?: string;
 };
 
@@ -25,6 +25,7 @@ function getCuisineName(type: string): string {
       "coffee_shop",
       "steak_house",
       "bar_and_grill",
+      "hamburger_restaurant",
     ].includes(type)
   ) {
     return "a " + CUISINE_MAP[type];
@@ -55,34 +56,27 @@ export default function RestaurantSwipe({
 
     for (const vote of allVotes) {
       // Track votes by restaurant -> guest -> vote
-      const restaurantId =
-        (vote as RestaurantVote & { restaurant?: { id: string }[] })
-          .restaurant?.[0]?.id ??
-        findRestaurantIdForVote(vote.id, cachedRestaurants);
+      if (!votesByRestaurant.has(vote.restaurantId)) {
+        votesByRestaurant.set(vote.restaurantId, new Map());
+      }
+      votesByRestaurant.get(vote.restaurantId)!.set(vote.guestId, vote.vote);
 
-      if (restaurantId) {
-        if (!votesByRestaurant.has(restaurantId)) {
-          votesByRestaurant.set(restaurantId, new Map());
-        }
-        votesByRestaurant.get(restaurantId)!.set(vote.guestId, vote.vote);
+      if (vote.guestId === guestId) {
+        myVotedIds.add(vote.restaurantId);
+      }
 
-        if (vote.guestId === guestId) {
-          myVotedIds.add(restaurantId);
-        }
+      // If any guest voted no on the restaurant, it's globally rejected
+      if (vote.vote === "no_restaurant") {
+        rejectedRestaurantIds.add(vote.restaurantId);
+      }
 
-        // If any guest voted no on the restaurant, it's globally rejected
-        if (vote.vote === "no_restaurant") {
-          rejectedRestaurantIds.add(restaurantId);
-        }
-
-        // If any guest voted no on a cuisine, collect the cuisine type
-        if (vote.vote === "no_cuisine") {
-          const restaurant = cachedRestaurants.find(
-            (r) => r.id === restaurantId,
-          );
-          if (restaurant) {
-            rejectedCuisineTypes.add(restaurant.type);
-          }
+      // If any guest voted no on a cuisine, collect the cuisine type
+      if (vote.vote === "no_cuisine") {
+        const restaurant = cachedRestaurants.find(
+          (r) => r.id === vote.restaurantId,
+        );
+        if (restaurant) {
+          rejectedCuisineTypes.add(restaurant.type);
         }
       }
     }
@@ -195,7 +189,7 @@ export default function RestaurantSwipe({
   // CONSENSUS VIEW
   if (consensusRestaurant) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
+      <div className="max-w-full mx-auto text-center">
         <div className="mb-6">
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="heading-lg text-primary-300 mb-2">Everyone agrees!</h2>
@@ -206,14 +200,14 @@ export default function RestaurantSwipe({
 
         <RestaurantCard restaurant={consensusRestaurant} featured />
 
-        <div className="mt-6 flex flex-col gap-3">
+        <div className="mt-6 flex flex-col gap-2">
           {consensusRestaurant.website &&
             consensusRestaurant.website !== "#" && (
               <a
                 href={consensusRestaurant.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-primary text-center"
+                className="rounded-md bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
               >
                 Visit Website
               </a>
@@ -221,11 +215,39 @@ export default function RestaurantSwipe({
           {consensusRestaurant.phone && (
             <a
               href={`tel:${consensusRestaurant.phone.replace(/[^\d]/g, "")}`}
-              className="btn-outline text-center"
+              className="rounded-md  bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
             >
               Call {consensusRestaurant.phone}
             </a>
           )}
+          <Button
+            variant="ghost"
+            size="md"
+            fullWidth
+            onClick={async () => {
+              const voteId = allVotes.find(
+                (v) =>
+                  v.guestId === guestId &&
+                  v.restaurantId === consensusRestaurant.id,
+              )?.id;
+
+              if (!voteId) {
+                console.error(
+                  "No existing vote found for consensus restaurant",
+                );
+                return;
+              }
+              await db.transact(
+                db.tx.restaurantVotes[voteId].update({
+                  guestId,
+                  vote: "no_restaurant",
+                  votedAt: new Date().toISOString(),
+                }),
+              );
+            }}
+          >
+            Actually, I don't want to eat here
+          </Button>
         </div>
       </div>
     );
@@ -240,11 +262,10 @@ export default function RestaurantSwipe({
 
       for (const vote of allVotes) {
         if (vote.guestId !== guest.id) continue;
-        const restaurantId = findRestaurantIdForVote(
-          vote.id,
-          cachedRestaurants,
+
+        const restaurant = cachedRestaurants.find(
+          (r) => r.id === vote.restaurantId,
         );
-        const restaurant = cachedRestaurants.find((r) => r.id === restaurantId);
 
         if (vote.vote === "no_restaurant" && restaurant) {
           rejectedRestaurants.push(`${restaurant.name} (${restaurant.id})`);
@@ -265,7 +286,7 @@ export default function RestaurantSwipe({
     });
 
     return (
-      <div className="max-w-2xl mx-auto text-center">
+      <div className="max-w-full mx-auto text-center">
         <div className="mb-6">
           <div className="text-5xl mb-4">😔</div>
           <h2 className="heading-lg text-primary-300 mb-2">
@@ -352,7 +373,7 @@ export default function RestaurantSwipe({
   // SWIPE VIEW
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-full w-full mx-auto">
       <div className="mb-4 flex justify-between items-center">
         <h2 className="heading-sm text-neutral-300">Would you eat here?</h2>
         <span className="text-neutral-500 text-sm">{remainingCount} left</span>
@@ -360,18 +381,18 @@ export default function RestaurantSwipe({
 
       <RestaurantCard restaurant={nextRestaurant} />
 
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col gap-2">
         <Button
-          variant="primary"
-          size="lg"
+          key={nextRestaurant.id + "_yes"}
+          variant="ghost"
           fullWidth
           onClick={() => handleVote(nextRestaurant.id, "yes")}
         >
           ✓ Yes, I would eat here
         </Button>
         <Button
-          variant="outline"
-          size="lg"
+          key={nextRestaurant.id + "_no_restaurant"}
+          variant="ghost"
           fullWidth
           onClick={() => handleVote(nextRestaurant.id, "no_restaurant")}
         >
@@ -379,30 +400,20 @@ export default function RestaurantSwipe({
         </Button>
         {nextRestaurant.type !== "generic_restaurant" && (
           <Button
-            variant="outline"
-            size="lg"
+            key={nextRestaurant.id + "_no_cuisine"}
+            variant="ghost"
             fullWidth
             onClick={() => handleVote(nextRestaurant.id, "no_cuisine")}
           >
-            ✗ No, I don&apos;t want {getCuisineName(nextRestaurant.type)}
+            ✗ No, I don&apos;t want{" "}
+            <span className="font-semibold text-primary-400">
+              {getCuisineName(nextRestaurant.type)}
+            </span>
           </Button>
         )}
       </div>
     </div>
   );
-}
-
-// Helper: find the restaurant ID for a vote by looking through votes arrays
-function findRestaurantIdForVote(
-  voteId: string,
-  cachedRestaurants: CachedRestaurant[],
-): string | undefined {
-  for (const restaurant of cachedRestaurants) {
-    if (restaurant.votes?.some((v) => v.id === voteId)) {
-      return restaurant.id;
-    }
-  }
-  return undefined;
 }
 
 function RestaurantCard({
@@ -412,17 +423,36 @@ function RestaurantCard({
   restaurant: CachedRestaurant;
   featured?: boolean;
 }) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
   return (
     <div
       className={`bg-neutral-800 rounded-xl overflow-hidden ${featured ? "ring-2 ring-primary-500" : ""}`}
     >
       {restaurant.photoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={`/api/places/photo?photoReference=${encodeURIComponent(restaurant.photoUrl)}&maxWidth=800&maxHeight=400`}
-          alt={restaurant.name}
-          className="w-full h-48 object-cover"
-        />
+        <div className="relative w-full h-48 bg-neutral-900">
+          {imageLoading && !imageError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+              <div className="animate-pulse flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-neutral-700"></div>
+                <div className="h-2 w-24 bg-neutral-700 rounded"></div>
+              </div>
+            </div>
+          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            key={restaurant.photoUrl}
+            src={`/api/places/photo?photoReference=${encodeURIComponent(restaurant.photoUrl)}&maxWidth=800&maxHeight=400`}
+            alt={restaurant.name}
+            className={`w-full h-48 object-cover ${imageLoading ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
+            onLoad={() => setImageLoading(false)}
+            onError={() => {
+              setImageLoading(false);
+              setImageError(true);
+            }}
+          />
+        </div>
       )}
       <div className="p-5">
         <div className="flex items-start justify-between mb-2">
@@ -453,9 +483,30 @@ function RestaurantCard({
           </p>
         )}
 
-        {restaurant.address && (
-          <p className="text-neutral-500 text-sm mt-2">{restaurant.address}</p>
-        )}
+        <div className="text-nowrap overflow-hidden">
+          {restaurant.address && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 text-sm mt-2 hover:text-primary-500 transition-colors"
+            >
+              {restaurant.address} ⎘
+            </a>
+          )}
+        </div>
+        <div className="text-nowrap overflow-hidden">
+          {restaurant.website && restaurant.website !== "#" && (
+            <a
+              href={restaurant.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 text-sm mt-2 hover:text-primary-500 transition-colors"
+            >
+              {restaurant.website} ⎘
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -50,8 +50,11 @@ export default function Home() {
         </p>
 
         {/* CTA Button */}
-        <Link href="/start" className="btn-primary inline-block">
-          Jump in →
+        <Link
+          href="/start"
+          className="inline-block bg-primary-500 text-white border-none rounded-md cursor-pointer transition-shadow duration-200 hover:shadow-lg px-6 py-3"
+        >
+          Find a restaurant →
         </Link>
       </div>
     </div>

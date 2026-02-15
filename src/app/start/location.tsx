@@ -48,7 +48,8 @@ export default function Location({ name, setChangeName }: LocationProps) {
   return (
     <div className="flex flex-col gap-4 row-start-2 items-center sm:items-start">
       <h1 className="text-neutral-200 text-xl">
-        {name}, where do you want to find a restaurant?
+        <span className="text-neutral-100 font-bold">{name}</span>, where do you
+        want to find a restaurant?
       </h1>
       <LocationCombobox
         value={selectedLocation}

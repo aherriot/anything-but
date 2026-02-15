@@ -19,8 +19,8 @@ export default function Name({ name, setChangeName }: NameProps) {
 
   return (
     <div className="flex flex-col gap-4 items-center sm:items-start">
+      <h1 className="text-neutral-200 text-xl">What is your name?</h1>
       <Input
-        label="What is your name or nickname?"
         type="text"
         value={newName}
         onChange={(e) => setNewName(e.target.value)}

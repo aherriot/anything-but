@@ -4,35 +4,38 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva(
   // Base styles - common to all buttons
-  "",
+  "rounded-md cursor-pointer",
   {
     variants: {
       variant: {
         // Primary - Main brand orange for primary actions
-        primary: "btn-primary",
-
-        // Secondary - Fresh green for secondary actions
-        secondary: "btn-secondary",
+        primary:
+          "bg-primary-500 text-white border-none  transition-shadow duration-200 hover:shadow-lg",
 
         // Outline - Tertiary button for special features
-        outline: "btn-outline",
+        outline:
+          "bg-transparent border border-primary-500 text-primary-500 hover:bg-primary-700 hover:text-white",
+
+        // Ghost - Subtle button for less important actions
+        ghost:
+          "bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10",
       },
       size: {
         // Small - Secondary actions, mobile
-        sm: "h-9 px-4 text-sm",
+        sm: "py-1 px-4 text-sm",
 
         // Default - Most common size
-        md: "h-11 px-6 text-base",
+        md: "py-2 px-6",
 
         // Large - Hero CTAs, important actions
-        lg: "h-12 px-8 text-lg",
+        lg: "py-3 px-8 text-lg",
       },
     },
     defaultVariants: {
       variant: "primary",
       size: "md",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -62,15 +65,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       variant,
       size,
+      disabled,
       fullWidth = false,
       loading = false,
       leftIcon,
       rightIcon,
       children,
-      disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     const isDisabled = disabled || loading;
 
@@ -78,8 +81,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={cn(
           buttonVariants({ variant, size }),
+          isDisabled && "opacity-50 cursor-not-allowed",
           fullWidth && "w-full",
-          className
+          className,
         )}
         ref={ref}
         disabled={isDisabled}
@@ -115,7 +119,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {!loading && rightIcon && rightIcon}
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";

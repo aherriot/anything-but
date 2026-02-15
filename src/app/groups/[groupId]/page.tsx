@@ -117,12 +117,14 @@ export default function Groups({
   }));
 
   // Flatten all votes from all restaurants
-  const allVotes = restaurantsWithVotes.flatMap((r) => r.votes);
+  const allVotes = restaurantsWithVotes.flatMap((r) =>
+    r.votes.map((v) => ({ ...v, restaurantId: r.id })),
+  );
 
   return (
     <div className="min-h-screen bg-neutral-900">
       <Header showInvite />
-      <div className="max-w-3xl mx-auto flex flex-col gap-8 px-4 pb-24">
+      <div className="w-2xl max-w-full mx-auto flex flex-col gap-8 px-4 pb-24">
         <RestaurantSwipe
           groupId={groupId}
           guestId={user.id}

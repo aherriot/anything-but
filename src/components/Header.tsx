@@ -1,8 +1,11 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import QRCode from "react-qr-code";
+import { Button } from "./Button";
 
 type HeaderProps = React.ComponentProps<"header"> & {
   showInvite: boolean;
@@ -19,7 +22,7 @@ function Header({ className, showInvite, ...props }: HeaderProps) {
   return (
     <header
       className={cn(
-        "flex items-center justify-between w-full h-16 px-4 mb-8 bg-neutral-800",
+        "flex items-center justify-between w-full h-16 px-4 sm:mb-8 mb-2 bg-neutral-800",
         className,
       )}
       {...props}
@@ -28,12 +31,12 @@ function Header({ className, showInvite, ...props }: HeaderProps) {
         <Link href="/">I&apos;m easy, but...</Link>
       </h1>
       {showInvite && (
-        <button
-          className="btn-primary"
+        <Button
+          variant="primary"
           onClick={() => setShowingInviteQR((prevVal) => !prevVal)}
         >
           Invite
-        </button>
+        </Button>
       )}
       {showInvite && showingInviteQR && (
         <div className="fixed inset-4 p-4 bg-black border border-neutral-300 shadow-lg flex flex-col items-center justify-center z-10 max-w-2xl m-auto">
