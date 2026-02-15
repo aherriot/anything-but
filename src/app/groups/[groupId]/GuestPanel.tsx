@@ -64,7 +64,7 @@ export default function GuestPanel({ group, allVotes }: GuestPanelProps) {
   const guestCount = guests.length;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20">
+    <div className="fixed bottom-0 left-0 right-0 z-5">
       <div className="max-w-4xl mx-auto">
         <div className="bg-neutral-800 border-t border-neutral-700 rounded-t-xl shadow-lg">
           {/* Collapsed header / toggle */}
