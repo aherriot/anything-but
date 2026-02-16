@@ -10,15 +10,13 @@ const buttonVariants = cva(
       variant: {
         // Primary - Main brand orange for primary actions
         primary:
-          "bg-primary-500 text-white border-none  transition-shadow duration-200 hover:shadow-lg",
+          "border-none transition-shadow duration-200 hover:shadow-lg",
 
         // Outline - Tertiary button for special features
-        outline:
-          "bg-transparent border border-primary-500 text-primary-500 hover:bg-primary-700 hover:text-white",
+        outline: "bg-transparent border",
 
         // Ghost - Subtle button for less important actions
-        ghost:
-          "bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10",
+        ghost: "bg-transparent",
       },
       size: {
         // Small - Secondary actions, mobile
@@ -30,10 +28,53 @@ const buttonVariants = cva(
         // Large - Hero CTAs, important actions
         lg: "py-3 px-8 text-lg",
       },
+      semantic: {
+        positive: "",
+        negative: "",
+      },
     },
+    compoundVariants: [
+      {
+        semantic: "positive",
+        variant: "primary",
+        className:
+          "bg-primary-500 text-white hover:enabled:bg-primary-600 focus:bg-primary-600 active:enabled:bg-primary-700",
+      },
+      {
+        semantic: "positive",
+        variant: "outline",
+        className:
+          "border-primary-500 text-primary-500 hover:bg-primary-500/20 hover:text-white",
+      },
+      {
+        semantic: "positive",
+        variant: "ghost",
+        className:
+          "text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 active:bg-primary-500/20",
+      },
+      {
+        semantic: "negative",
+        variant: "primary",
+        className:
+          "bg-accent-500 text-white hover:enabled:bg-accent-600 focus:bg-accent-600 active:enabled:bg-accent-700",
+      },
+      {
+        semantic: "negative",
+        variant: "outline",
+        className:
+          "border-accent-500 text-accent-500 hover:enabled:bg-accent-500/20 hover:enabled:text-white",
+      },
+      {
+        semantic: "negative",
+        variant: "ghost",
+        className:
+          "text-accent-400 hover:enabled:bg-accent-400/10 focus:enabled:bg-accent-500/10 active:enabled:bg-accent-500/20",
+      },
+    ],
     defaultVariants: {
       variant: "primary",
       size: "md",
+      semantic: "positive",
     },
   },
 );
@@ -65,6 +106,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       variant,
       size,
+      semantic,
       disabled,
       fullWidth = false,
       loading = false,
@@ -80,7 +122,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          buttonVariants({ variant, size }),
+          buttonVariants({ variant, size, semantic }),
           isDisabled && "opacity-50 cursor-not-allowed",
           fullWidth && "w-full",
           className,

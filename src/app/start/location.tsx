@@ -187,7 +187,11 @@ export default function Location({ name, setChangeName }: LocationProps) {
       )}
 
       <div className="flex gap-4 mt-4">
-        <Button variant="outline" onClick={() => setChangeName(true)}>
+        <Button
+          variant="outline"
+          semantic="negative"
+          onClick={() => setChangeName(true)}
+        >
           Change name
         </Button>
         <Button

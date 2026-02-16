@@ -53,7 +53,7 @@ function Header({
                 role="status"
               >
                 <button
-                  className="relative bg-neutral-900 border border-primary-500 text-primary-500 text-sm font-medium rounded-lg px-4 py-2 shadow-lg whitespace-nowrap cursor-pointer"
+                  className="relative bg-neutral-900 border border-accent-500 text-accent-500 text-sm font-medium rounded-lg px-4 py-2 shadow-lg whitespace-nowrap cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDismissHint?.();

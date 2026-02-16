@@ -233,7 +233,7 @@ export default function RestaurantSwipe({
         {isSoloGuest ? (
           <div className="mb-6 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
             <div className="text-4xl mb-3">👋</div>
-            <h2 className="heading-lg text-primary-300 mb-2">
+            <h2 className="heading-lg text-accent-400 mb-2">
               You&apos;re choosing solo!
             </h2>
             <p className="text-neutral-300 mb-1">
@@ -260,29 +260,32 @@ export default function RestaurantSwipe({
         <RestaurantCard restaurant={consensusRestaurant} featured />
 
         <div className="mt-6 flex flex-col gap-2">
-          {consensusRestaurant.website &&
-            consensusRestaurant.website !== "#" && (
+          <div className="flex flex-row gap-2">
+            {consensusRestaurant.website &&
+              consensusRestaurant.website !== "#" && (
+                <a
+                  href={consensusRestaurant.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-md bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
+                >
+                  Visit Website
+                </a>
+              )}
+            {consensusRestaurant.phone && (
               <a
-                href={consensusRestaurant.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-md bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
+                href={`tel:${consensusRestaurant.phone.replace(/[^\d]/g, "")}`}
+                className="rounded-md  bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
               >
-                Visit Website
+                Call {consensusRestaurant.phone}
               </a>
             )}
-          {consensusRestaurant.phone && (
-            <a
-              href={`tel:${consensusRestaurant.phone.replace(/[^\d]/g, "")}`}
-              className="rounded-md  bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
-            >
-              Call {consensusRestaurant.phone}
-            </a>
-          )}
+          </div>
           <Button
             variant="ghost"
             size="md"
             fullWidth
+            semantic="negative"
             onClick={async () => {
               const voteId = allVotes.find(
                 (v) =>
@@ -449,6 +452,7 @@ export default function RestaurantSwipe({
         <Button
           key={nextRestaurant.id + "_no_restaurant"}
           variant="ghost"
+          semantic="negative"
           fullWidth
           onClick={() => handleVote(nextRestaurant.id, "no_restaurant")}
         >
@@ -458,11 +462,12 @@ export default function RestaurantSwipe({
           <Button
             key={nextRestaurant.id + "_no_cuisine"}
             variant="ghost"
+            semantic="negative"
             fullWidth
             onClick={() => handleVote(nextRestaurant.id, "no_cuisine")}
           >
             ✗ No, I don&apos;t want{" "}
-            <span className="font-semibold text-primary-400">
+            <span className="font-semibold text-accent-600">
               {getCuisineName(nextRestaurant.type)}
             </span>
           </Button>
