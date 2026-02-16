@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 
 import RestaurantSwipe from "./RestaurantSwipe";
 import db from "@/utils/db";
@@ -53,6 +53,22 @@ export default function Groups({
   const name = userData?.$users?.[0]?.name ?? "";
 
   const group = data?.groups?.[0];
+
+  // Manage the invite hint state — shown once per visit after a delay,
+  // dismissed when the user interacts with the invite button or votes.
+  const [showHint, setShowHint] = useState(false);
+  const hintDismissedRef = useRef(false);
+
+  useEffect(() => {
+    if (!group || hintDismissedRef.current) return;
+    const timer = setTimeout(() => setShowHint(true), 1500);
+    return () => clearTimeout(timer);
+  }, [group]);
+
+  const dismissHint = useCallback(() => {
+    setShowHint(false);
+    hintDismissedRef.current = true;
+  }, []);
 
   if (!user) {
     return (
@@ -123,7 +139,12 @@ export default function Groups({
 
   return (
     <div className="min-h-screen bg-neutral-900">
-      <Header showInvite guestName={name} />
+      <Header
+        showInvite
+        guestName={name}
+        showHint={showHint}
+        onDismissHint={dismissHint}
+      />
       <div className="w-2xl max-w-full mx-auto flex flex-col gap-8 px-4 pb-24">
         <RestaurantSwipe
           groupId={groupId}
@@ -132,6 +153,7 @@ export default function Groups({
           cachedRestaurants={restaurantsWithVotes}
           allVotes={allVotes}
           fetchStatus={group.fetchStatus ?? undefined}
+          onDismissHint={dismissHint}
         />
       </div>
       <GuestPanel group={group} allVotes={allVotes} />

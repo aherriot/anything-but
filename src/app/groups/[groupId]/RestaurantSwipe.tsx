@@ -14,6 +14,7 @@ type RestaurantSwipeProps = {
   cachedRestaurants: CachedRestaurant[];
   allVotes: (RestaurantVote & { restaurantId: string })[];
   fetchStatus?: string;
+  onDismissHint: () => void;
 };
 
 function getCuisineName(type: string): string {
@@ -41,6 +42,7 @@ export default function RestaurantSwipe({
   cachedRestaurants,
   allVotes,
   fetchStatus,
+  onDismissHint,
 }: RestaurantSwipeProps) {
   // Build sets for efficient filtering
   const {
@@ -204,6 +206,9 @@ export default function RestaurantSwipe({
     restaurantId: string,
     vote: "yes" | "no_restaurant" | "no_cuisine",
   ) => {
+    // Dismiss the invite hint in the header
+    onDismissHint?.();
+
     // Release the lock so the next candidate is shown after the vote
     setLockedId(null);
 
@@ -428,10 +433,7 @@ export default function RestaurantSwipe({
 
   return (
     <div className="max-w-full w-full mx-auto">
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="heading-sm text-neutral-300">Would you eat here?</h2>
-        <span className="text-neutral-500 text-sm">{remainingCount} left</span>
-      </div>
+      <h2 className="heading-sm text-neutral-300 mb-2">Would you eat here?</h2>
 
       <RestaurantCard restaurant={nextRestaurant} />
 

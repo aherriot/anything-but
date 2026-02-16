@@ -1,39 +1,29 @@
 "use client";
 
-import * as React from "react";
+import { useState, ComponentProps } from "react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 import InviteModal from "./InviteModal";
 
-type HeaderProps = React.ComponentProps<"header"> & {
+type HeaderProps = ComponentProps<"header"> & {
   showInvite: boolean;
   guestName?: string;
   className?: string;
+  showHint?: boolean;
+  onDismissHint?: () => void;
 };
 
-function Header({ className, showInvite, guestName, ...props }: HeaderProps) {
-  const [showingInviteQR, setShowingInviteQR] = React.useState(false);
-  const [showHint, setShowHint] = React.useState(false);
-  const [currentUrl, setCurrentUrl] = React.useState("");
-
-  React.useEffect(() => {
-    setCurrentUrl(window.location.href);
-  }, []);
-
-  // Show the invite hint once per group page visit, after a short delay
-  React.useEffect(() => {
-    if (!showInvite) return;
-
-    const timer = setTimeout(() => setShowHint(true), 1500);
-    return () => clearTimeout(timer);
-  }, [showInvite]);
-
-  // Dismiss hint when the user opens the invite modal
-  React.useEffect(() => {
-    if (showingInviteQR) setShowHint(false);
-  }, [showingInviteQR]);
+function Header({
+  className,
+  showInvite,
+  guestName,
+  showHint,
+  onDismissHint,
+  ...props
+}: HeaderProps) {
+  const [showingInviteQR, setShowingInviteQR] = useState(false);
 
   return (
     <header
@@ -48,7 +38,10 @@ function Header({ className, showInvite, guestName, ...props }: HeaderProps) {
           <div className="relative">
             <Button
               variant="primary"
-              onClick={() => setShowingInviteQR((prevVal) => !prevVal)}
+              onClick={() => {
+                setShowingInviteQR((prevVal) => !prevVal);
+                onDismissHint?.();
+              }}
             >
               Invite
             </Button>
@@ -63,7 +56,7 @@ function Header({ className, showInvite, guestName, ...props }: HeaderProps) {
                   className="relative bg-neutral-900 border border-primary-500 text-primary-500 text-sm font-medium rounded-lg px-4 py-2 shadow-lg whitespace-nowrap cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowHint(false);
+                    onDismissHint?.();
                   }}
                   aria-label="Dismiss hint"
                 >
@@ -77,7 +70,7 @@ function Header({ className, showInvite, guestName, ...props }: HeaderProps) {
         )}
         {showInvite && showingInviteQR && (
           <InviteModal
-            currentUrl={currentUrl}
+            currentUrl={window.location.href}
             setShowingInviteQR={setShowingInviteQR}
             guestName={guestName}
           />
