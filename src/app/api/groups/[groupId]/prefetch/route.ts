@@ -29,8 +29,6 @@ const BATCH_SIZE = 20;
 // In-memory lock to prevent concurrent prefetch calls for the same group
 const activePrefetches = new Set<string>();
 
-console.log("test");
-
 type GooglePlacePhoto = {
   name: string;
   widthPx: number;
