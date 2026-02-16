@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { id } from "@instantdb/react";
 import { CUISINE_MAP } from "@/utils/constants";
 import { Button } from "@/components/Button";
@@ -130,20 +130,31 @@ export default function RestaurantSwipe({
 
   // Lock the displayed restaurant so it doesn't change from under the user
   // when other guests vote. Only release when THIS user votes on it.
-  const lockedIdRef = useRef<string | null>(null);
+  //
+  // We track the locked ID in state. During render we check if the lock is
+  // still valid (user hasn't voted on it yet). If it is, we keep showing it.
+  // If the user voted on it (or there's no lock), we show the next candidate
+  // and schedule a state update to lock it for future renders.
+  const [lockedId, setLockedId] = useState<string | null>(null);
 
-  const nextRestaurant = useMemo(() => {
-    const lid = lockedIdRef.current;
-    // Keep showing the locked restaurant until this user votes on it
-    if (lid && !myVotedIds.has(lid)) {
-      const locked = cachedRestaurants.find((r) => r.id === lid);
-      if (locked) return locked;
-    }
-    return nextCandidate;
-  }, [cachedRestaurants, myVotedIds, nextCandidate]);
+  // Is the lock still valid? Only break when THIS user has voted on it.
+  const lockStillValid = lockedId !== null && !myVotedIds.has(lockedId);
 
-  // Sync the ref to the currently displayed restaurant (ref writes are safe during render)
-  lockedIdRef.current = nextRestaurant?.id ?? null;
+  const lockedRestaurant = lockStillValid
+    ? (cachedRestaurants.find((r) => r.id === lockedId) ?? null)
+    : null;
+
+  const nextRestaurant = lockedRestaurant ?? nextCandidate;
+
+  // Derive what the locked ID *should* be based on the displayed restaurant
+  const desiredLockedId = nextRestaurant?.id ?? null;
+
+  // If the desired lock differs from current, schedule an update.
+  // This is a state update during render which React handles by re-rendering
+  // (not an infinite loop because once set, desiredLockedId === lockedId).
+  if (desiredLockedId !== lockedId) {
+    setLockedId(desiredLockedId);
+  }
 
   // Count remaining available restaurants (not rejected, not all voted on)
   const remainingCount = useMemo(() => {
@@ -194,7 +205,7 @@ export default function RestaurantSwipe({
     vote: "yes" | "no_restaurant" | "no_cuisine",
   ) => {
     // Release the lock so the next candidate is shown after the vote
-    lockedIdRef.current = null;
+    setLockedId(null);
 
     const voteId = id();
     await db.transact(

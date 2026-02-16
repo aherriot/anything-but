@@ -19,6 +19,7 @@ export default [
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
       ...hooksPlugin.configs.recommended.rules,
+      "no-console": ["warn", { allow: ["error"] }],
     },
     settings: {
       react: {

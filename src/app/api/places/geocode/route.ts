@@ -44,8 +44,6 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
-    console.log(JSON.stringify(data, null, " "));
-
     if (data.status !== "OK" || !data.results || data.results.length === 0) {
       // Fallback: try without result_type filter
       const fallbackResponse = await fetch(
