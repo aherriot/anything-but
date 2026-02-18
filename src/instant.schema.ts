@@ -15,7 +15,7 @@ const _schema = i.schema({
       type: i.string().optional(),
     }),
     groups: i.entity({
-      createdAt: i.date(),
+      createdAt: i.date().indexed(),
       name: i.string(),
       ownerId: i.string(),
       placeId: i.string(),
