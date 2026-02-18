@@ -232,14 +232,10 @@ export default function RestaurantSwipe({
       <div className="max-w-full mx-auto text-center">
         {isSoloGuest ? (
           <div className="mb-6 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
-            <div className="text-4xl mb-3">👋</div>
-            <h2 className="heading-lg text-accent-400 mb-2">
+            <h2 className="heading-md text-accent-400 mb-2">
               You&apos;re choosing solo!
             </h2>
-            <p className="text-neutral-300 mb-1">
-              Invite friends to help pick a restaurant together.
-            </p>
-            <p className="text-neutral-400 text-sm">
+            <p className="text-neutral-300">
               Hit the{" "}
               <span className="font-semibold text-primary-400">Invite</span>{" "}
               button above to share a QR code.
@@ -330,7 +326,7 @@ export default function RestaurantSwipe({
         );
 
         if (vote.vote === "no_restaurant" && restaurant) {
-          rejectedRestaurants.push(`${restaurant.name} (${restaurant.id})`);
+          rejectedRestaurants.push(`${restaurant.name}`);
         }
         if (vote.vote === "no_cuisine" && restaurant) {
           const cuisineName = CUISINE_MAP[restaurant.type];
@@ -517,7 +513,7 @@ function RestaurantCard({
       )}
       <div className="p-5">
         <div className="flex items-start justify-between mb-2">
-          <div>
+          <div className="justify-start">
             <h3 className="text-xl font-semibold text-neutral-100">
               {restaurant.name}
             </h3>
