@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { id } from "@instantdb/react";
 import { CUISINE_MAP } from "@/utils/constants";
 import { Button } from "@/components/Button";
@@ -17,21 +17,24 @@ type RestaurantSwipeProps = {
   onDismissHint: () => void;
 };
 
-function getCuisineName(type: string): string {
+function getCuisineName(type: string): ReactNode {
+  const cuisineName = (
+    <span className="font-semibold text-accent-600">{CUISINE_MAP[type]}</span>
+  );
   if (
     [
-      "pub",
-      "diner",
-      "bar",
-      "coffee_shop",
-      "steak_house",
-      "bar_and_grill",
-      "hamburger_restaurant",
+      "ramen_restaurant",
+      "barbecue_restaurant",
+      "breakfast_restaurant",
+      "dessert_restaurant",
+      "brunch_restaurant",
+      "fast_food_restaurant",
+      "seafood_restaurant",
     ].includes(type)
   ) {
-    return "a " + CUISINE_MAP[type];
+    return cuisineName;
   } else {
-    return CUISINE_MAP[type];
+    return <>{cuisineName} food</>;
   }
 }
 
@@ -224,254 +227,305 @@ export default function RestaurantSwipe({
     );
   };
 
-  // CONSENSUS VIEW
   if (consensusRestaurant) {
-    const isSoloGuest = guests.length === 1;
-
     return (
-      <div className="max-w-full mx-auto text-center">
-        {isSoloGuest ? (
-          <div className="mb-6 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
-            <h2 className="heading-md text-accent-400 mb-2">
-              You&apos;re choosing solo!
-            </h2>
-            <p className="text-neutral-300">
-              Hit the{" "}
-              <span className="font-semibold text-primary-400">Invite</span>{" "}
-              button above to share a QR code.
-            </p>
-          </div>
-        ) : (
-          <div className="mb-6">
-            <div className="text-5xl mb-4">🎉</div>
-            <h2 className="heading-lg text-primary-300 mb-2">
-              Everyone agrees!
-            </h2>
-            <p className="text-neutral-400">
-              All {guests.length} guests want to eat here
-            </p>
-          </div>
-        )}
-
-        <RestaurantCard restaurant={consensusRestaurant} featured />
-
-        <div className="mt-6 flex flex-col gap-2">
-          <div className="flex flex-row gap-2">
-            {consensusRestaurant.website &&
-              consensusRestaurant.website !== "#" && (
-                <a
-                  href={consensusRestaurant.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-md bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
-                >
-                  Visit Website
-                </a>
-              )}
-            {consensusRestaurant.phone && (
-              <a
-                href={`tel:${consensusRestaurant.phone.replace(/[^\d]/g, "")}`}
-                className="rounded-md  bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
-              >
-                Call {consensusRestaurant.phone}
-              </a>
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            size="md"
-            fullWidth
-            semantic="negative"
-            onClick={async () => {
-              const voteId = allVotes.find(
-                (v) =>
-                  v.guestId === guestId &&
-                  v.restaurantId === consensusRestaurant.id,
-              )?.id;
-
-              if (!voteId) {
-                console.error(
-                  "No existing vote found for consensus restaurant",
-                );
-                return;
-              }
-              await db.transact(
-                db.tx.restaurantVotes[voteId].update({
-                  guestId,
-                  vote: "no_restaurant",
-                  votedAt: new Date().toISOString(),
-                }),
-              );
-            }}
-          >
-            Actually, I don't want to eat here
-          </Button>
-        </div>
-      </div>
+      <ConsensusView
+        restaurant={consensusRestaurant}
+        guestCount={guests.length}
+        guestId={guestId}
+        allVotes={allVotes}
+      />
     );
   }
 
-  // NO OPTIONS LEFT VIEW
   if (!nextRestaurant && remainingCount === 0 && fetchStatus === "exhausted") {
-    // Build restriction summary per guest
-    const guestRestrictions = guests.map((guest) => {
-      const rejectedRestaurants: string[] = [];
-      const rejectedCuisines: string[] = [];
-
-      for (const vote of allVotes) {
-        if (vote.guestId !== guest.id) continue;
-
-        const restaurant = cachedRestaurants.find(
-          (r) => r.id === vote.restaurantId,
-        );
-
-        if (vote.vote === "no_restaurant" && restaurant) {
-          rejectedRestaurants.push(`${restaurant.name}`);
-        }
-        if (vote.vote === "no_cuisine" && restaurant) {
-          const cuisineName = CUISINE_MAP[restaurant.type];
-          if (!rejectedCuisines.includes(cuisineName)) {
-            rejectedCuisines.push(cuisineName);
-          }
-        }
-      }
-
-      return {
-        name: guest.name || "Anonymous",
-        rejectedRestaurants,
-        rejectedCuisines,
-      };
-    });
-
     return (
-      <div className="max-w-full mx-auto text-center">
-        <div className="mb-6">
-          <div className="text-5xl mb-4">😔</div>
-          <h2 className="heading-lg text-primary-300 mb-2">
-            No agreement found
-          </h2>
-          <p className="text-neutral-400">
-            The group couldn&apos;t agree on any restaurant. Here&apos;s what
-            each person had to say:
-          </p>
-        </div>
-
-        <div className="space-y-4 text-left">
-          {guestRestrictions.map((guest, idx) => (
-            <div key={idx} className="bg-neutral-800 rounded-lg p-4">
-              <h3 className="text-neutral-100 font-semibold mb-2">
-                {guest.name}
-              </h3>
-              {guest.rejectedCuisines.length > 0 && (
-                <div className="mb-2">
-                  <span className="text-neutral-400 text-sm">
-                    Rejected cuisines:{" "}
-                  </span>
-                  <span className="text-red-400 text-sm">
-                    {guest.rejectedCuisines.join(", ")}
-                  </span>
-                </div>
-              )}
-              {guest.rejectedRestaurants.length > 0 && (
-                <div>
-                  <span className="text-neutral-400 text-sm">
-                    Rejected restaurants:{" "}
-                  </span>
-                  <span className="text-red-400 text-sm">
-                    {guest.rejectedRestaurants.join(", ")}
-                  </span>
-                </div>
-              )}
-              {guest.rejectedCuisines.length === 0 &&
-                guest.rejectedRestaurants.length === 0 && (
-                  <p className="text-neutral-500 text-sm italic">
-                    No restrictions
-                  </p>
-                )}
-            </div>
-          ))}
-        </div>
-      </div>
+      <NoAgreementView
+        guests={guests}
+        allVotes={allVotes}
+        cachedRestaurants={cachedRestaurants}
+      />
     );
   }
 
-  // WAITING FOR RESTAURANTS TO LOAD
   if (!nextRestaurant && cachedRestaurants.length === 0) {
-    return (
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-        <p className="mt-4 text-neutral-400">Finding restaurants near you...</p>
-      </div>
-    );
+    return <LoadingView />;
   }
 
-  // WAITING FOR MORE TO BE FETCHED / OTHER GUESTS
   if (!nextRestaurant) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="mb-4">
-          <div className="text-4xl mb-4">⏳</div>
-          <h2 className="heading-lg text-primary-300 mb-2">
-            Waiting for others
-          </h2>
-          <p className="text-neutral-400">
-            You&apos;ve reviewed all available restaurants. Waiting for other
-            guests to finish voting
-            {fetchStatus !== "exhausted" && " or fetching more options"}...
-          </p>
-        </div>
-        <div className="text-neutral-500 text-sm">
-          {remainingCount} restaurant{remainingCount !== 1 ? "s" : ""} still
-          need votes from other guests
-        </div>
-      </div>
+      <WaitingView remainingCount={remainingCount} fetchStatus={fetchStatus} />
     );
   }
 
-  // SWIPE VIEW
+  return <SwipeView restaurant={nextRestaurant} onVote={handleVote} />;
+}
 
+// --- Sub-views ---
+
+function ConsensusView({
+  restaurant,
+  guestCount,
+  guestId,
+  allVotes,
+}: {
+  restaurant: CachedRestaurant;
+  guestCount: number;
+  guestId: string;
+  allVotes: (RestaurantVote & { restaurantId: string })[];
+}) {
+  const isSoloGuest = guestCount === 1;
+
+  return (
+    <div className="max-w-full mx-auto text-center">
+      {isSoloGuest ? (
+        <div className="mb-6 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
+          <h2 className="heading-md text-accent-400 mb-2">
+            You&apos;re choosing solo!
+          </h2>
+          <p className="text-neutral-300">
+            Hit the{" "}
+            <span className="font-semibold text-primary-400">Invite</span>{" "}
+            button above to share a QR code.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-6">
+          <div className="text-5xl mb-4">🎉</div>
+          <h2 className="heading-lg text-primary-300 mb-2">Everyone agrees!</h2>
+          <p className="text-neutral-400">
+            All {guestCount} guests want to eat here
+          </p>
+        </div>
+      )}
+
+      <RestaurantCard restaurant={restaurant} featured />
+
+      <div className="mt-6 flex flex-col gap-2">
+        <div className="flex flex-row gap-2">
+          {restaurant.website && restaurant.website !== "#" && (
+            <a
+              href={restaurant.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
+            >
+              Visit Website
+            </a>
+          )}
+          {restaurant.phone && (
+            <a
+              href={`tel:${restaurant.phone.replace(/[^\d]/g, "")}`}
+              className="rounded-md  bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
+            >
+              Call {restaurant.phone}
+            </a>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="md"
+          fullWidth
+          semantic="negative"
+          onClick={async () => {
+            const voteId = allVotes.find(
+              (v) => v.guestId === guestId && v.restaurantId === restaurant.id,
+            )?.id;
+
+            if (!voteId) {
+              console.error("No existing vote found for consensus restaurant");
+              return;
+            }
+            await db.transact(
+              db.tx.restaurantVotes[voteId].update({
+                guestId,
+                vote: "no_restaurant",
+                votedAt: new Date().toISOString(),
+              }),
+            );
+          }}
+        >
+          Actually, I don't want to eat here
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function NoAgreementView({
+  guests,
+  allVotes,
+  cachedRestaurants,
+}: {
+  guests: { id: string; name?: string }[];
+  allVotes: (RestaurantVote & { restaurantId: string })[];
+  cachedRestaurants: CachedRestaurant[];
+}) {
+  const guestRestrictions = guests.map((guest) => {
+    const rejectedRestaurants: string[] = [];
+    const rejectedCuisines: string[] = [];
+
+    for (const vote of allVotes) {
+      if (vote.guestId !== guest.id) continue;
+
+      const restaurant = cachedRestaurants.find(
+        (r) => r.id === vote.restaurantId,
+      );
+
+      if (vote.vote === "no_restaurant" && restaurant) {
+        rejectedRestaurants.push(`${restaurant.name}`);
+      }
+      if (vote.vote === "no_cuisine" && restaurant) {
+        const cuisineName = CUISINE_MAP[restaurant.type];
+        if (!rejectedCuisines.includes(cuisineName)) {
+          rejectedCuisines.push(cuisineName);
+        }
+      }
+    }
+
+    return {
+      name: guest.name || "Anonymous",
+      rejectedRestaurants,
+      rejectedCuisines,
+    };
+  });
+
+  return (
+    <div className="max-w-full mx-auto text-center">
+      <div className="mb-6">
+        <div className="text-5xl mb-4">😔</div>
+        <h2 className="heading-lg text-primary-300 mb-2">No agreement found</h2>
+        <p className="text-neutral-400">
+          The group couldn&apos;t agree on any restaurant. Here&apos;s what each
+          person had to say:
+        </p>
+      </div>
+
+      <div className="space-y-4 text-left">
+        {guestRestrictions.map((guest, idx) => (
+          <div key={idx} className="bg-neutral-800 rounded-lg p-4">
+            <h3 className="text-neutral-100 font-semibold mb-2">
+              {guest.name}
+            </h3>
+            {guest.rejectedCuisines.length > 0 && (
+              <div className="mb-2">
+                <span className="text-neutral-400 text-sm">
+                  Rejected cuisines:{" "}
+                </span>
+                <span className="text-red-400 text-sm">
+                  {guest.rejectedCuisines.join(", ")}
+                </span>
+              </div>
+            )}
+            {guest.rejectedRestaurants.length > 0 && (
+              <div>
+                <span className="text-neutral-400 text-sm">
+                  Rejected restaurants:{" "}
+                </span>
+                <span className="text-red-400 text-sm">
+                  {guest.rejectedRestaurants.join(", ")}
+                </span>
+              </div>
+            )}
+            {guest.rejectedCuisines.length === 0 &&
+              guest.rejectedRestaurants.length === 0 && (
+                <p className="text-neutral-500 text-sm italic">
+                  No restrictions
+                </p>
+              )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LoadingView() {
+  return (
+    <div className="max-w-2xl mx-auto text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+      <p className="mt-4 text-neutral-400">Finding restaurants near you...</p>
+    </div>
+  );
+}
+
+function WaitingView({
+  remainingCount,
+  fetchStatus,
+}: {
+  remainingCount: number;
+  fetchStatus?: string;
+}) {
+  return (
+    <div className="max-w-2xl mx-auto text-center">
+      <div className="mb-4">
+        <div className="text-4xl mb-4">⏳</div>
+        <h2 className="heading-lg text-primary-300 mb-2">Waiting for others</h2>
+        <p className="text-neutral-400">
+          You&apos;ve reviewed all available restaurants. Waiting for other
+          guests to finish voting
+          {fetchStatus !== "exhausted" && " or fetching more options"}...
+        </p>
+      </div>
+      <div className="text-neutral-500 text-sm">
+        {remainingCount} restaurant{remainingCount !== 1 ? "s" : ""} still need
+        votes from other guests
+      </div>
+    </div>
+  );
+}
+
+function SwipeView({
+  restaurant,
+  onVote,
+}: {
+  restaurant: CachedRestaurant;
+  onVote: (
+    restaurantId: string,
+    vote: "yes" | "no_restaurant" | "no_cuisine",
+  ) => void;
+}) {
   return (
     <div className="max-w-full w-full mx-auto">
       <h2 className="heading-sm text-neutral-300 mb-2">Would you eat here?</h2>
 
-      <RestaurantCard restaurant={nextRestaurant} />
+      <RestaurantCard restaurant={restaurant} />
 
       <div className="mt-6 flex flex-col gap-2">
         <Button
-          key={nextRestaurant.id + "_yes"}
+          key={restaurant.id + "_yes"}
           variant="ghost"
           fullWidth
-          onClick={() => handleVote(nextRestaurant.id, "yes")}
+          onClick={() => onVote(restaurant.id, "yes")}
         >
           ✓ Yes, I would eat here
         </Button>
         <Button
-          key={nextRestaurant.id + "_no_restaurant"}
+          key={restaurant.id + "_no_restaurant"}
           variant="ghost"
           semantic="negative"
           fullWidth
-          onClick={() => handleVote(nextRestaurant.id, "no_restaurant")}
+          onClick={() => onVote(restaurant.id, "no_restaurant")}
         >
           ✗ No, I don&apos;t like this restaurant
         </Button>
-        {nextRestaurant.type !== "generic_restaurant" && (
+        {restaurant.type !== "generic_restaurant" && (
           <Button
-            key={nextRestaurant.id + "_no_cuisine"}
+            key={restaurant.id + "_no_cuisine"}
             variant="ghost"
             semantic="negative"
             fullWidth
-            onClick={() => handleVote(nextRestaurant.id, "no_cuisine")}
+            onClick={() => onVote(restaurant.id, "no_cuisine")}
           >
-            ✗ No, I don&apos;t want{" "}
-            <span className="font-semibold text-accent-600">
-              {getCuisineName(nextRestaurant.type)}
-            </span>
+            ✗ No, I don&apos;t want {getCuisineName(restaurant.type)}
           </Button>
         )}
       </div>
     </div>
   );
 }
+
+// --- Shared components ---
 
 function RestaurantCard({
   restaurant,
@@ -518,7 +572,7 @@ function RestaurantCard({
               {restaurant.name}
             </h3>
             <p className="text-sm text-neutral-400">
-              {getCuisineName(restaurant.type)}
+              {CUISINE_MAP[restaurant.type]}
             </p>
           </div>
           <div className="text-right flex-shrink-0 ml-4">
