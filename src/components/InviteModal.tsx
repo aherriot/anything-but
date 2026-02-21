@@ -90,7 +90,7 @@ export default function InviteModal({
           ref={closeButtonRef}
           onClick={() => setShowingInviteQR(false)}
           aria-label="Close invite dialog"
-          className="absolute top-3 right-3 z-10 p-2 rounded-full text-neutral-400 hover:text-neutral-100 hover:bg-neutral-700 transition-colors cursor-pointer"
+          className="absolute top-1 right-1 z-10 p-5 rounded-full text-neutral-400 hover:text-neutral-100 hover:bg-neutral-700 transition-colors cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -136,24 +136,14 @@ export default function InviteModal({
           </p>
 
           {/* Actions */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="mt-6 flex flex-col gap-3">
             <Button
-              variant="outline"
+              variant="primary"
               semantic="positive"
               size="md"
-              className="w-full sm:w-auto"
               onClick={handleCopyUrl}
             >
               {copied ? "Copied!" : "Copy Link"}
-            </Button>
-            <Button
-              variant="outline"
-              semantic="negative"
-              size="md"
-              className="w-full sm:w-auto"
-              onClick={() => setShowingInviteQR(false)}
-            >
-              Close
             </Button>
           </div>
         </div>
