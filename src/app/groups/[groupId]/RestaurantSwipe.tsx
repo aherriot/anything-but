@@ -566,15 +566,13 @@ function RestaurantCard({
         </div>
       )}
       <div className="p-5">
-        <div className="flex items-start justify-between mb-2">
-          <div className="justify-start">
-            <h3 className="text-xl font-semibold text-neutral-100">
-              {restaurant.name}
-            </h3>
-            <p className="text-sm text-neutral-400">
-              {CUISINE_MAP[restaurant.type]}
-            </p>
-          </div>
+        <div className="flex items-start justify-between">
+          <h3
+            className="text-xl font-semibold text-neutral-100 overflow-hidden text-ellipsis whitespace-nowrap"
+            title={restaurant.name}
+          >
+            {restaurant.name}
+          </h3>
           <div className="text-right flex-shrink-0 ml-4">
             {restaurant.rating && (
               <div className="flex items-center gap-1">
@@ -584,17 +582,24 @@ function RestaurantCard({
                 </span>
               </div>
             )}
-            <p className="text-sm text-neutral-400">{restaurant.priceRange}</p>
+          </div>
+        </div>
+        <div className="flex justify-between mb-2">
+          <div className="text-sm text-neutral-400">
+            {CUISINE_MAP[restaurant.type]}
+          </div>
+          <div className="text-sm text-neutral-400">
+            {restaurant.priceRange}
           </div>
         </div>
 
         {restaurant.description && (
-          <p className="text-neutral-400 text-sm mt-2 line-clamp-2">
+          <p className="text-left text-neutral-400 text-sm mt-2 line-clamp-2">
             {restaurant.description}
           </p>
         )}
 
-        <div className="text-nowrap overflow-hidden">
+        <div className="text-left text-nowrap overflow-hidden">
           {restaurant.address && (
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address)}`}
@@ -606,7 +611,7 @@ function RestaurantCard({
             </a>
           )}
         </div>
-        <div className="text-nowrap overflow-hidden">
+        <div className="text-left text-nowrap overflow-hidden">
           {restaurant.website && restaurant.website !== "#" && (
             <a
               href={restaurant.website}
