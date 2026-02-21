@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 import { Button } from "./Button";
 
@@ -15,6 +15,17 @@ export default function InviteModal({
 }: InviteModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
 
   // Focus trap & keyboard handling
   useEffect(() => {
@@ -74,7 +85,7 @@ export default function InviteModal({
         aria-labelledby="invite-modal-title"
         className="relative w-full max-w-sm sm:max-w-md bg-neutral-800 border border-neutral-700 rounded-2xl shadow-xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
       >
-        {/* Close button */}
+        {/* Close X */}
         <button
           ref={closeButtonRef}
           onClick={() => setShowingInviteQR(false)}
@@ -124,15 +135,27 @@ export default function InviteModal({
             </span>
           </p>
 
-          {/* Action */}
-          <Button
-            variant="outline"
-            size="md"
-            className="mt-6 w-full sm:w-auto"
-            onClick={() => setShowingInviteQR(false)}
-          >
-            Close
-          </Button>
+          {/* Actions */}
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              semantic="positive"
+              size="md"
+              className="w-full sm:w-auto"
+              onClick={handleCopyUrl}
+            >
+              {copied ? "Copied!" : "Copy Link"}
+            </Button>
+            <Button
+              variant="outline"
+              semantic="negative"
+              size="md"
+              className="w-full sm:w-auto"
+              onClick={() => setShowingInviteQR(false)}
+            >
+              Close
+            </Button>
+          </div>
         </div>
       </div>
     </div>
