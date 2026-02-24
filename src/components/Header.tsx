@@ -32,7 +32,7 @@ function Header({
     >
       <div className="max-w-4xl mx-auto flex items-center justify-between h-full">
         <h1 className="text-gradient-warm heading-md font-bold">
-          <Link href="/">I&apos;m easy, but...</Link>
+          <Link href="/">Anything, but...</Link>
         </h1>
         {showInvite && (
           <div className="relative">

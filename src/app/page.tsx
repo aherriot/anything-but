@@ -33,9 +33,7 @@ export default function Home() {
     <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-6 mt-[-4rem]">
       <div className="max-w-3xl mx-auto text-center">
         {/* Main heading */}
-        <h1 className="heading-xl text-gradient-warm mb-8">
-          I&apos;m easy, but...
-        </h1>
+        <h1 className="heading-xl text-gradient-warm mb-8">Anything, but...</h1>
 
         {/* Rotating excuses */}
         <div className="mb-8">

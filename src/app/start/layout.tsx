@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "I'm easy, but...",
+  title: "Anything, but...",
   description: "Collective Restaurant Decision Making",
 };
 

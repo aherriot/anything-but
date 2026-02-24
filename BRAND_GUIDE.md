@@ -1,8 +1,8 @@
-# I'm easy, but... - Brand Guide
+# Anything, but... - Brand Guide
 
 ## Overview
 
-I'm easy, but... is a fun, collaborative restaurant selection app that brings people together through food. The brand identity reflects warmth, friendliness, and the joy of shared dining experiences.
+Anything, but... is a fun, collaborative restaurant selection app that brings people together through food. The brand identity reflects warmth, friendliness, and the joy of shared dining experiences.
 
 ## Color Palette
 
@@ -172,14 +172,14 @@ Use **Accent Purple** for:
 
 ```html
 <!-- Gradient text for headings -->
-<h1 class="text-gradient-primary">I'm Easy, but...</h1>
+<h1 class="text-gradient-primary">Anything, but...</h1>
 <h2 class="text-gradient-warm">Find Your Perfect Meal</h2>
 
 <!-- With Tailwind -->
 <h1
   class="bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent"
 >
-  I'm easy, but...
+  Anything, but...
 </h1>
 ```
 
@@ -235,7 +235,7 @@ All color combinations meet WCAG AA standards:
 <!-- Hero section example -->
 <div class="bg-gradient-warm min-h-screen flex items-center justify-center p-6">
   <div class="text-center text-white animate-slide-up">
-    <h1 class="heading-xl mb-4">Welcome to I'm Easy, but...</h1>
+    <h1 class="heading-xl mb-4">Welcome to Anything, but...</h1>
     <p class="body-lg mb-8 max-w-2xl mx-auto">
       The fun way to choose restaurants with friends and family
     </p>

@@ -114,7 +114,7 @@ export default function InviteModal({
             id="invite-modal-title"
             className="text-gradient-warm heading-lg font-bold text-center mb-4"
           >
-            I&apos;m easy, but...
+            Anything, but...
           </h2>
 
           {/* QR Code */}
