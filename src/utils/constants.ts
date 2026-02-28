@@ -1,25 +1,36 @@
 export type UnitSystem = "metric" | "imperial";
 
 export type RadiusOption = {
-  metricLabel: string;
-  imperialLabel: string;
+  label: string;
   meters: number;
 };
 
-export const RADIUS_OPTIONS: RadiusOption[] = [
-  { metricLabel: "500 m", imperialLabel: "0.3 mi", meters: 500 },
-  { metricLabel: "1 km", imperialLabel: "0.6 mi", meters: 1000 },
-  { metricLabel: "5 km", imperialLabel: "3 mi", meters: 5000 },
-  { metricLabel: "10 km", imperialLabel: "6 mi", meters: 10000 },
-  { metricLabel: "25 km", imperialLabel: "15 mi", meters: 25000 },
-  { metricLabel: "50 km", imperialLabel: "30 mi", meters: 50000 },
+export const METRIC_RADIUS_OPTIONS: RadiusOption[] = [
+  { label: "500 m", meters: 500 },
+  { label: "1 km", meters: 1000 },
+  { label: "5 km", meters: 5000 },
+  { label: "10 km", meters: 10000 },
+  { label: "25 km", meters: 25000 },
+  { label: "50 km", meters: 50000 },
 ];
 
-export function getRadiusLabel(
-  option: RadiusOption,
-  units: UnitSystem,
-): string {
-  return units === "imperial" ? option.imperialLabel : option.metricLabel;
+export const IMPERIAL_RADIUS_OPTIONS: RadiusOption[] = [
+  { label: "0.25 mi", meters: 402 },
+  { label: "0.5 mi", meters: 805 },
+  { label: "3 mi", meters: 4828 },
+  { label: "5 mi", meters: 8047 },
+  { label: "15 mi", meters: 24140 },
+  { label: "30 mi", meters: 48280 },
+];
+
+export function getRadiusOptions(units: UnitSystem): RadiusOption[] {
+  return units === "imperial" ? IMPERIAL_RADIUS_OPTIONS : METRIC_RADIUS_OPTIONS;
+}
+
+export function getDefaultRadius(units: UnitSystem): RadiusOption {
+  return units === "imperial"
+    ? IMPERIAL_RADIUS_OPTIONS[2] // 3 mi
+    : METRIC_RADIUS_OPTIONS[2]; // 5 km
 }
 
 export const CUISINE_MAP: Record<string, string> = {
