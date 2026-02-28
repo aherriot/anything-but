@@ -21,7 +21,7 @@ interface LocationComboboxProps {
 export default function LocationCombobox({
   value,
   onChange,
-  placeholder = "Search for a city...",
+  placeholder = "Search for a city, neighbourhood, or address...",
   autoFocus = false,
   className = "",
 }: LocationComboboxProps) {
@@ -80,14 +80,14 @@ export default function LocationCombobox({
           </ComboboxButton>
         </div>
 
-        <ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 shadow-lg border-2 border-neutral-200 focus:outline-none">
+        <ComboboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-neutral-200 py-1 shadow-lg border-2 border-neutral-200 focus:outline-none">
           {error ? (
             <div className="relative cursor-default select-none py-2 px-4 text-error">
               Error: {error}
             </div>
           ) : query.length === 0 ? (
             <div className="relative cursor-default select-none py-2 px-4 text-neutral-500">
-              Start typing to search for a city...
+              Start typing to search...
             </div>
           ) : isLoading ? (
             <div className="relative cursor-default select-none py-2 px-4 text-neutral-500">

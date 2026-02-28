@@ -18,24 +18,36 @@ export default function Name({ name, setChangeName }: NameProps) {
   };
 
   return (
-    <div className="flex flex-col gap-4 items-center sm:items-start">
+    <div className="flex flex-col gap-4 items-start">
       <h1 className="text-neutral-200 text-xl">What is your name?</h1>
       <Input
         type="text"
         value={newName}
+        maxLength={20}
         onChange={(e) => setNewName(e.target.value)}
         autoFocus
       />
-      <Button
-        variant="primary"
-        disabled={!newName.trim()}
-        onClick={() => {
-          saveName(newName.trim());
-          setChangeName(false);
-        }}
-      >
-        Get Started
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          semantic="negative"
+          onClick={() => {
+            setChangeName(false);
+          }}
+        >
+          Back
+        </Button>
+        <Button
+          variant="primary"
+          disabled={!newName.trim()}
+          onClick={() => {
+            saveName(newName.trim());
+            setChangeName(false);
+          }}
+        >
+          Get Started
+        </Button>
+      </div>
     </div>
   );
 }

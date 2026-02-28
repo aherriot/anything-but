@@ -534,34 +534,18 @@ function RestaurantCard({
   restaurant: CachedRestaurant;
   featured?: boolean;
 }) {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
-
   return (
     <div
       className={`bg-neutral-800 rounded-xl overflow-hidden ${featured ? "ring-2 ring-primary-500" : ""}`}
     >
       {restaurant.photoUrl && (
         <div className="relative w-full h-48 bg-neutral-900">
-          {imageLoading && !imageError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
-              <div className="animate-pulse flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-neutral-700"></div>
-                <div className="h-2 w-24 bg-neutral-700 rounded"></div>
-              </div>
-            </div>
-          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={restaurant.photoUrl}
             src={`/api/places/photo?photoReference=${encodeURIComponent(restaurant.photoUrl)}&maxWidth=800&maxHeight=400`}
             alt={restaurant.name}
-            className={`w-full h-48 object-cover ${imageLoading ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
-            onLoad={() => setImageLoading(false)}
-            onError={() => {
-              setImageLoading(false);
-              setImageError(true);
-            }}
+            className={`w-full h-48 object-cover bg-neutral-700`}
           />
         </div>
       )}

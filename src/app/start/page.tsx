@@ -24,24 +24,12 @@ export default function Start() {
   const name = userData?.$users?.[0]?.name ?? "";
 
   if (isAuthLoading || !user || isUserLoading) {
-    return (
-      <div className="min-h-screen max-w-2xl m-auto bg-neutral-900 flex items-center justify-center">
-        <p className="text-neutral-400">Loading...</p>
-      </div>
-    );
+    return <p className="text-neutral-400">Loading...</p>;
   }
 
   if (!name || changeName) {
-    return (
-      <div className="min-h-screen max-w-2xl m-auto bg-neutral-900">
-        <Name name={name} setChangeName={setChangeName} />
-      </div>
-    );
+    return <Name name={name} setChangeName={setChangeName} />;
   }
 
-  return (
-    <div className="min-h-screen max-w-2xl m-auto bg-neutral-900">
-      <Location name={name} setChangeName={setChangeName} />
-    </div>
-  );
+  return <Location name={name} setChangeName={setChangeName} />;
 }

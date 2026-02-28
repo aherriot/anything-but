@@ -12,9 +12,11 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
+    <div className="min-h-screen bg-neutral-900">
       <Header showInvite={false} />
-      {children}
-    </>
+      <main className="max-w-2xl mx-auto flex items-center justify-between px-4 md:px-0">
+        {children}
+      </main>
+    </div>
   );
 }

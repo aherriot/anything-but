@@ -1,11 +1,23 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { id } from "@instantdb/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "@headlessui/react";
 
 import { Button } from "@/components/Button";
 import LocationCombobox from "@/components/LocationCombobox";
 import type { Location } from "@/hooks/useLocationSearch";
 import db from "@/utils/db";
+import {
+  RADIUS_OPTIONS,
+  getRadiusLabel,
+  type RadiusOption,
+  type UnitSystem,
+} from "@/utils/constants";
 
 type LocationProps = {
   name: string;
@@ -21,10 +33,25 @@ export default function Location({ name, setChangeName }: LocationProps) {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     null,
   );
+  const [selectedRadius, setSelectedRadius] = useState<RadiusOption>(
+    RADIUS_OPTIONS[2], // default 5 km
+  );
   const [geoState, setGeoState] = useState<GeoState>({ status: "idle" });
   const router = useRouter();
 
   const { user } = db.useAuth();
+
+  // Query the user's persisted unit preference
+  const { data: userData } = db.useQuery(
+    user ? { $users: { $: { where: { id: user.id }, limit: 1 } } } : null,
+  );
+  const units: UnitSystem =
+    (userData?.$users?.[0]?.unitPreference as UnitSystem) || "metric";
+
+  const handleUnitChange = (newUnits: UnitSystem) => {
+    if (!user) return;
+    db.transact(db.tx.$users[user.id].update({ unitPreference: newUnits }));
+  };
 
   const handleCreateGroup = async (location: Location) => {
     if (!user) return;
@@ -37,6 +64,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
         ownerId: user.id,
         placeId: location.placeId,
         placeName: location.text,
+        searchRadius: selectedRadius.meters,
         fetchStatus: "ready",
       }),
     );
@@ -115,7 +143,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
   const isGeoLoading = geoState.status === "loading";
 
   return (
-    <div className="flex flex-col gap-4 row-start-2 items-center sm:items-start w-full">
+    <div className="flex flex-col gap-4 row-start-2 items-start w-full">
       <h1 className="text-neutral-200 text-xl">
         <span className="text-neutral-100 font-bold">{name}</span>, where do you
         want to find a restaurant?
@@ -127,7 +155,6 @@ export default function Location({ name, setChangeName }: LocationProps) {
           <LocationCombobox
             value={selectedLocation}
             onChange={setSelectedLocation}
-            placeholder="Search for a city..."
             autoFocus
           />
         </div>
@@ -185,6 +212,93 @@ export default function Location({ name, setChangeName }: LocationProps) {
           {geoState.message}
         </p>
       )}
+
+      {/* Search radius selector */}
+      <div className="flex flex-col gap-3 w-full">
+        <label className="text-neutral-200 text-lg whitespace-nowrap">
+          Search radius
+        </label>
+        <div className="flex items-center gap-3">
+        <Listbox value={selectedRadius} onChange={setSelectedRadius}>
+          <div className="relative w-40">
+            <ListboxButton className="relative w-full cursor-pointer rounded-md border-2 border-neutral-300 bg-white py-2 pl-3 pr-10 text-left text-neutral-800 focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10 focus:outline-none transition-all">
+              <span className="block truncate">
+                {getRadiusLabel(selectedRadius, units)}
+              </span>
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg
+                  className="h-4 w-4 text-neutral-400"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M7 7l3-3 3 3m0 6l-3 3-3-3"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </ListboxButton>
+            <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 shadow-lg border-2 border-neutral-200 focus:outline-none">
+              {RADIUS_OPTIONS.map((option) => (
+                <ListboxOption
+                  key={option.meters}
+                  value={option}
+                  className="group relative cursor-pointer select-none py-2 pl-3 pr-9 data-[focus]:bg-primary-200 data-[focus]:text-primary-900 text-neutral-700 transition-colors"
+                >
+                  <span className="block truncate group-data-[selected]:font-semibold">
+                    {getRadiusLabel(option, units)}
+                  </span>
+                  <span className="absolute inset-y-0 right-0 hidden items-center pr-3 group-data-[selected]:flex text-primary-600">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </div>
+        </Listbox>
+
+        {/* Unit toggle */}
+        <div className="inline-flex rounded-md border-2 border-neutral-300 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => handleUnitChange("metric")}
+            className={`px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              units === "metric"
+                ? "bg-primary-500 text-white"
+                : "bg-white text-neutral-600 hover:bg-neutral-100"
+            }`}
+          >
+            km
+          </button>
+          <button
+            type="button"
+            onClick={() => handleUnitChange("imperial")}
+            className={`px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              units === "imperial"
+                ? "bg-primary-500 text-white"
+                : "bg-white text-neutral-600 hover:bg-neutral-100"
+            }`}
+          >
+            mi
+          </button>
+        </div>
+        </div>
+      </div>
 
       <div className="flex gap-4 mt-4">
         <Button

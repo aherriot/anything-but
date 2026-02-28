@@ -52,8 +52,7 @@ export async function GET(request: NextRequest) {
       },
       body: JSON.stringify({
         input: query,
-        includedPrimaryTypes: ["locality", "neighborhood"],
-        // includedRegionCodes: ["ca"], // Restrict to Canada
+        includedPrimaryTypes: ["geocode"],
         languageCode: "en",
       }),
       signal: AbortSignal.timeout(10000), // 10 second timeout

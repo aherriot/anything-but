@@ -13,6 +13,7 @@ const _schema = i.schema({
       imageURL: i.string().optional(),
       name: i.string().optional(),
       type: i.string().optional(),
+      unitPreference: i.string().optional(), // "metric" | "imperial"
     }),
     groups: i.entity({
       createdAt: i.date().indexed(),
@@ -20,6 +21,7 @@ const _schema = i.schema({
       ownerId: i.string(),
       placeId: i.string(),
       placeName: i.string(),
+      searchRadius: i.number().optional(),
       nextPageToken: i.string().optional(),
       fetchStatus: i.string().optional(), // "fetching" | "ready" | "exhausted"
     }),

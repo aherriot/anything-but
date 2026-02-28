@@ -105,6 +105,7 @@ async function resolveCoordinates(
 async function fetchRestaurantBatch(
   latitude: number,
   longitude: number,
+  radius: number,
   pageToken?: string,
 ): Promise<{ places: GooglePlace[]; nextPageToken?: string }> {
   const requestBody: Record<string, unknown> = {
@@ -112,7 +113,7 @@ async function fetchRestaurantBatch(
     locationBias: {
       circle: {
         center: { latitude, longitude },
-        radius: 10000.0,
+        radius,
       },
     },
     maxResultCount: BATCH_SIZE,
@@ -227,10 +228,14 @@ export async function POST(
       group.placeId as string,
     );
 
+    // Use group's search radius (default 5000m)
+    const searchRadius = (group.searchRadius as number | undefined) ?? 5000;
+
     // Fetch a batch of restaurants
     const { places, nextPageToken } = await fetchRestaurantBatch(
       latitude,
       longitude,
+      searchRadius,
       pageToken,
     );
 

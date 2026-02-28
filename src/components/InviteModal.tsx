@@ -74,7 +74,7 @@ export default function InviteModal({
             </DialogTitle>
 
             {/* QR Code */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 w-full max-w-[280px] sm:max-w-[320px] mx-auto">
+            <div className="bg-neutral-50 rounded-xl p-4 sm:p-5 w-full max-w-[280px] sm:max-w-[320px] mx-auto">
               <QRCode
                 size={256}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
