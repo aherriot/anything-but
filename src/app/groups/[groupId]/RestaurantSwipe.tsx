@@ -277,9 +277,9 @@ function ConsensusView({
   const isSoloGuest = guestCount === 1;
 
   return (
-    <div className="max-w-full mx-auto text-center">
+    <div className="w-full mx-auto text-center">
       {isSoloGuest ? (
-        <div className="mb-6 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
+        <div className="mb-3 sm:mb-7 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
           <h2 className="heading-md text-accent-400 mb-2">
             You&apos;re choosing solo!
           </h2>
@@ -301,7 +301,7 @@ function ConsensusView({
 
       <RestaurantCard restaurant={restaurant} featured />
 
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mt-2 flex flex-col gap-2">
         <div className="flex flex-row gap-2">
           {restaurant.website && restaurant.website !== "#" && (
             <a
@@ -310,7 +310,7 @@ function ConsensusView({
               rel="noopener noreferrer"
               className="rounded-md bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
             >
-              Visit Website
+              Website
             </a>
           )}
           {restaurant.phone && (
@@ -318,7 +318,7 @@ function ConsensusView({
               href={`tel:${restaurant.phone.replace(/[^\d]/g, "")}`}
               className="rounded-md  bg-transparent text-primary-500 hover:bg-primary-500/10 focus:bg-primary-500/10 py-2 px-6 w-full"
             >
-              Call {restaurant.phone}
+              {restaurant.phone}
             </a>
           )}
         </div>
@@ -391,7 +391,7 @@ function NoAgreementView({
   });
 
   return (
-    <div className="max-w-full mx-auto text-center">
+    <div className="w-full mx-auto text-center">
       <div className="mb-6">
         <div className="text-5xl mb-4">😔</div>
         <h2 className="heading-lg text-primary-300 mb-2">No agreement found</h2>
@@ -491,7 +491,7 @@ function SwipeView({
 
       <RestaurantCard restaurant={restaurant} />
 
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mt-2   flex flex-col gap-2">
         <Button
           key={restaurant.id + "_yes"}
           variant="ghost"

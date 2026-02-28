@@ -145,7 +145,7 @@ export default function Groups({
         showHint={showHint}
         onDismissHint={dismissHint}
       />
-      <div className="w-2xl max-w-full mx-auto flex flex-col gap-8 px-4 pb-24">
+      <div className="w-2xl max-w-full mx-auto flex flex-col md:px-0 px-4 pb-24">
         <RestaurantSwipe
           groupId={groupId}
           guestId={user.id}

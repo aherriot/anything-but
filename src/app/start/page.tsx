@@ -25,7 +25,7 @@ export default function Start() {
 
   if (isAuthLoading || !user || isUserLoading) {
     return (
-      <div className="min-h-screen max-w-2xl m-auto p-8 bg-neutral-900 flex items-center justify-center">
+      <div className="min-h-screen max-w-2xl m-auto bg-neutral-900 flex items-center justify-center">
         <p className="text-neutral-400">Loading...</p>
       </div>
     );
@@ -33,14 +33,14 @@ export default function Start() {
 
   if (!name || changeName) {
     return (
-      <div className="min-h-screen max-w-2xl m-auto p-8 bg-neutral-900">
+      <div className="min-h-screen max-w-2xl m-auto bg-neutral-900">
         <Name name={name} setChangeName={setChangeName} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen max-w-2xl m-auto p-8 bg-neutral-900">
+    <div className="min-h-screen max-w-2xl m-auto bg-neutral-900">
       <Location name={name} setChangeName={setChangeName} />
     </div>
   );

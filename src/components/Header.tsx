@@ -30,7 +30,7 @@ function Header({
       className={cn("w-full h-16 px-4 sm:mb-8 mb-2 bg-neutral-800", className)}
       {...props}
     >
-      <div className="max-w-4xl mx-auto flex items-center justify-between h-full">
+      <div className="max-w-2xl mx-auto flex items-center justify-between h-full">
         <h1 className="text-gradient-warm heading-md font-bold">
           <Link href="/">Anything, but...</Link>
         </h1>
