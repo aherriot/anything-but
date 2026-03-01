@@ -279,14 +279,14 @@ function ConsensusView({
   return (
     <div className="w-full mx-auto text-center">
       {isSoloGuest ? (
-        <div className="mb-3 sm:mb-7 bg-primary-500/10 border border-primary-500/30 rounded-xl p-5">
-          <h2 className="heading-md text-accent-400 mb-2">
+        <div className="mb-3 sm:mb-7 bg-primary-500/10 border border-primary-500/30 rounded-xl p-2 sm:p-5">
+          <h2 className="heading-sm text-accent-400 mb-2">
             You&apos;re choosing solo!
           </h2>
           <p className="text-neutral-300">
             Hit the{" "}
             <span className="font-semibold text-primary-400">Invite</span>{" "}
-            button above to share a QR code.
+            button above to collaborate with friends and family on where to eat.
           </p>
         </div>
       ) : (
@@ -539,13 +539,13 @@ function RestaurantCard({
       className={`bg-neutral-800 rounded-xl overflow-hidden ${featured ? "ring-2 ring-primary-500" : ""}`}
     >
       {restaurant.photoUrl && (
-        <div className="relative w-full h-48 bg-neutral-900">
+        <div className="relative w-full h-42 sm:h-60 bg-neutral-900">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={restaurant.photoUrl}
             src={`/api/places/photo?photoReference=${encodeURIComponent(restaurant.photoUrl)}&maxWidth=800&maxHeight=400`}
             alt={restaurant.name}
-            className={`w-full h-48 object-cover bg-neutral-700`}
+            className={`w-full h-42 sm:h-60 object-cover bg-neutral-700`}
           />
         </div>
       )}
