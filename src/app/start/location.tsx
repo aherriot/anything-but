@@ -37,6 +37,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
     getDefaultRadius("metric"),
   );
   const [geoState, setGeoState] = useState<GeoState>({ status: "idle" });
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
   const { user } = db.useAuth();
@@ -150,8 +151,21 @@ export default function Location({ name, setChangeName }: LocationProps) {
 
   const isGeoLoading = geoState.status === "loading";
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedLocation) {
+      setFormError("Please select a location.");
+      return;
+    }
+    setFormError(null);
+    handleCreateGroup(selectedLocation);
+  };
+
   return (
-    <div className="flex flex-col gap-4 row-start-2 items-start w-full">
+    <form
+      className="flex flex-col gap-4 row-start-2 items-start w-full"
+      onSubmit={handleSubmit}
+    >
       <h1 className="text-neutral-200 text-xl">
         <span className="text-neutral-100 font-bold">{name}</span>, where do you
         want to find a restaurant?
@@ -159,7 +173,10 @@ export default function Location({ name, setChangeName }: LocationProps) {
 
       <LocationCombobox
         value={selectedLocation}
-        onChange={setSelectedLocation}
+        onChange={(location) => {
+          setSelectedLocation(location);
+          if (location) setFormError(null);
+        }}
         onGeolocate={handleUseMyLocation}
         isGeoLoading={isGeoLoading}
         autoFocus
@@ -169,6 +186,13 @@ export default function Location({ name, setChangeName }: LocationProps) {
       {geoState.status === "error" && (
         <p className="text-error text-sm -mt-2" role="alert">
           {geoState.message}
+        </p>
+      )}
+
+      {/* Form validation error */}
+      {formError && (
+        <p className="text-error text-sm -mt-2" role="alert">
+          {formError}
         </p>
       )}
 
@@ -259,21 +283,17 @@ export default function Location({ name, setChangeName }: LocationProps) {
 
       <div className="flex gap-4 mt-4">
         <Button
+          type="button"
           variant="ghost"
           semantic="negative"
           onClick={() => setChangeName(true)}
         >
           Change name
         </Button>
-        <Button
-          onClick={() =>
-            selectedLocation && handleCreateGroup(selectedLocation)
-          }
-          disabled={!selectedLocation}
-        >
+        <Button type="submit" disabled={!selectedLocation}>
           Jump in
         </Button>
       </div>
-    </div>
+    </form>
   );
 }

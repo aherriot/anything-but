@@ -14,13 +14,25 @@ export default function Name({ name, setChangeName }: NameProps) {
 
   const saveName = async (newName: string) => {
     if (!user) return;
-    await db.transact(db.tx.$users[user.id].update({ name: newName }));
+    await db.transact(db.tx.$users[user.id].update({ name: newName.trim() }));
+    setChangeName(false);
   };
 
   return (
-    <div className="flex flex-col gap-4 items-start">
+    <form
+      className="flex flex-col gap-4 items-start"
+      onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        // get form data and save name
+        const formData = new FormData(e.currentTarget);
+        const name = formData.get("name") as string;
+        saveName(name);
+      }}
+    >
       <h1 className="text-neutral-200 text-xl">What is your name?</h1>
       <Input
+        id="name"
+        name="name"
         type="text"
         value={newName}
         maxLength={20}
@@ -29,7 +41,8 @@ export default function Name({ name, setChangeName }: NameProps) {
       />
       <div className="flex gap-2">
         <Button
-          variant="outline"
+          type="button"
+          variant="ghost"
           semantic="negative"
           onClick={() => {
             setChangeName(false);
@@ -37,17 +50,10 @@ export default function Name({ name, setChangeName }: NameProps) {
         >
           Back
         </Button>
-        <Button
-          variant="primary"
-          disabled={!newName.trim()}
-          onClick={() => {
-            saveName(newName.trim());
-            setChangeName(false);
-          }}
-        >
+        <Button type="submit" variant="primary" disabled={!newName.trim()}>
           Get Started
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
