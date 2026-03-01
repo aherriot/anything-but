@@ -157,62 +157,13 @@ export default function Location({ name, setChangeName }: LocationProps) {
         want to find a restaurant?
       </h1>
 
-      {/* Search + GPS row */}
-      <div className="flex w-full gap-2 items-start">
-        <div className="flex-1 min-w-0">
-          <LocationCombobox
-            value={selectedLocation}
-            onChange={setSelectedLocation}
-            autoFocus
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleUseMyLocation}
-          disabled={isGeoLoading}
-          aria-label="Use my current location"
-          title="Use my current location"
-          className="flex-shrink-0 h-13 w-13 flex items-center justify-center rounded-md border-2 border-neutral-300 bg-white text-neutral-500 hover:border-primary-500 hover:text-primary-500 focus:border-primary-500 focus:ring-[3px] focus:ring-primary-500/10 focus:outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isGeoLoading ? (
-            <svg
-              className="h-5 w-5 animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-              <circle cx="12" cy="12" r="8" strokeDasharray="2 3" />
-            </svg>
-          )}
-        </button>
-      </div>
+      <LocationCombobox
+        value={selectedLocation}
+        onChange={setSelectedLocation}
+        onGeolocate={handleUseMyLocation}
+        isGeoLoading={isGeoLoading}
+        autoFocus
+      />
 
       {/* GPS error message */}
       {geoState.status === "error" && (
@@ -279,14 +230,14 @@ export default function Location({ name, setChangeName }: LocationProps) {
           </Listbox>
 
           {/* Unit toggle */}
-          <div className="inline-flex rounded-md border-2 border-neutral-300 overflow-hidden">
+          <div className="inline-flex rounded-md overflow-hidden gap-1 border border-neutral-300">
             <button
               type="button"
               onClick={() => handleUnitChange("metric")}
-              className={`px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              className={`px-2 py-2 text-sm rounded transition-colors cursor-pointer ${
                 units === "metric"
-                  ? "bg-primary-500 text-white"
-                  : "bg-white text-neutral-600 hover:bg-neutral-100"
+                  ? "text-primary-500 font-bold bg-neutral-100"
+                  : "text-neutral-400 hover:text-primary-500"
               }`}
             >
               Metric
@@ -294,10 +245,10 @@ export default function Location({ name, setChangeName }: LocationProps) {
             <button
               type="button"
               onClick={() => handleUnitChange("imperial")}
-              className={`px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              className={`px-2 py-2 text-sm rounded transition-colors cursor-pointer ${
                 units === "imperial"
-                  ? "bg-primary-500 text-white"
-                  : "bg-white text-neutral-600 hover:bg-neutral-100"
+                  ? "text-primary-500 font-bold bg-neutral-100"
+                  : "text-neutral-400 hover:text-primary-500"
               }`}
             >
               Imperial
@@ -308,7 +259,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
 
       <div className="flex gap-4 mt-4">
         <Button
-          variant="outline"
+          variant="ghost"
           semantic="negative"
           onClick={() => setChangeName(true)}
         >

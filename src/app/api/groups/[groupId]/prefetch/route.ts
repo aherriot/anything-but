@@ -89,7 +89,7 @@ async function resolveCoordinates(
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": GOOGLE_API_KEY!,
-      "X-Goog-FieldMask": "id,displayName,formattedAddress,location",
+      "X-Goog-FieldMask": "id,location",
     },
     signal: AbortSignal.timeout(10000),
   });

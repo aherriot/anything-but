@@ -9,8 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Primary - Main brand orange for primary actions
-        primary:
-          "border-none transition-shadow duration-200 hover:shadow-lg",
+        primary: "border-none transition-shadow duration-200 hover:shadow-lg",
 
         // Outline - Tertiary button for special features
         outline: "bg-transparent border",
@@ -123,7 +122,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         className={cn(
           buttonVariants({ variant, size, semantic }),
-          isDisabled && "opacity-50 cursor-not-allowed",
+          isDisabled && "opacity-30 cursor-not-allowed bg-none",
           fullWidth && "w-full",
           className,
         )}
