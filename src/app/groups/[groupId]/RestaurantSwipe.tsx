@@ -3,6 +3,12 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { id } from "@instantdb/react";
 import { CUISINE_MAP } from "@/utils/constants";
+import {
+  computeVoteState,
+  findConsensusRestaurant,
+  findNextCandidate,
+  countRemaining,
+} from "@/utils/voting";
 import { Button } from "@/components/Button";
 import db from "@/utils/db";
 import type { CachedRestaurant, RestaurantVote } from "@/types";
@@ -47,91 +53,39 @@ export default function RestaurantSwipe({
   fetchStatus,
   onDismissHint,
 }: RestaurantSwipeProps) {
-  // Build sets for efficient filtering
+  // Build sets for efficient filtering (see src/utils/voting.ts)
   const {
     rejectedRestaurantIds,
     rejectedCuisineTypes,
     votesByRestaurant,
     myVotedIds,
-  } = useMemo(() => {
-    const rejectedRestaurantIds = new Set<string>();
-    const rejectedCuisineTypes = new Set<string>();
-    const votesByRestaurant = new Map<string, Map<string, string>>();
-    const myVotedIds = new Set<string>();
-
-    for (const vote of allVotes) {
-      // Track votes by restaurant -> guest -> vote
-      if (!votesByRestaurant.has(vote.restaurantId)) {
-        votesByRestaurant.set(vote.restaurantId, new Map());
-      }
-      votesByRestaurant.get(vote.restaurantId)!.set(vote.guestId, vote.vote);
-
-      if (vote.guestId === guestId) {
-        myVotedIds.add(vote.restaurantId);
-      }
-
-      // If any guest voted no on the restaurant, it's globally rejected
-      if (vote.vote === "no_restaurant") {
-        rejectedRestaurantIds.add(vote.restaurantId);
-      }
-
-      // If any guest voted no on a cuisine, collect the cuisine type
-      if (vote.vote === "no_cuisine") {
-        const restaurant = cachedRestaurants.find(
-          (r) => r.id === vote.restaurantId,
-        );
-        if (restaurant) {
-          rejectedCuisineTypes.add(restaurant.type);
-        }
-      }
-    }
-
-    return {
-      rejectedRestaurantIds,
-      rejectedCuisineTypes,
-      votesByRestaurant,
-      myVotedIds,
-    };
-  }, [allVotes, cachedRestaurants, guestId]);
+  } = useMemo(
+    () => computeVoteState(allVotes, cachedRestaurants, guestId),
+    [allVotes, cachedRestaurants, guestId],
+  );
 
   // Find the consensus restaurant (all guests voted "yes")
-  const consensusRestaurant = useMemo(() => {
-    if (guests.length === 0) return null;
-
-    for (const restaurant of cachedRestaurants) {
-      const restaurantVoteMap = votesByRestaurant.get(restaurant.id);
-      if (!restaurantVoteMap) continue;
-
-      const allVotedYes = guests.every(
-        (guest) => restaurantVoteMap.get(guest.id) === "yes",
-      );
-      if (allVotedYes) return restaurant;
-    }
-    return null;
-  }, [cachedRestaurants, guests, votesByRestaurant]);
+  const consensusRestaurant = useMemo(
+    () => findConsensusRestaurant(cachedRestaurants, guests, votesByRestaurant),
+    [cachedRestaurants, guests, votesByRestaurant],
+  );
 
   // Get the next restaurant candidate from the filtered list
-  const nextCandidate = useMemo(() => {
-    if (consensusRestaurant) return null;
-
-    return (
-      cachedRestaurants.find((r) => {
-        // Skip if I already voted on it
-        if (myVotedIds.has(r.id)) return false;
-        // Skip if globally rejected (any guest said no to this restaurant)
-        if (rejectedRestaurantIds.has(r.id)) return false;
-        // Skip if cuisine is globally rejected
-        if (rejectedCuisineTypes.has(r.type)) return false;
-        return true;
-      }) ?? null
-    );
-  }, [
-    cachedRestaurants,
-    myVotedIds,
-    rejectedRestaurantIds,
-    rejectedCuisineTypes,
-    consensusRestaurant,
-  ]);
+  const nextCandidate = useMemo(
+    () =>
+      findNextCandidate(
+        cachedRestaurants,
+        { myVotedIds, rejectedRestaurantIds, rejectedCuisineTypes },
+        consensusRestaurant,
+      ),
+    [
+      cachedRestaurants,
+      myVotedIds,
+      rejectedRestaurantIds,
+      rejectedCuisineTypes,
+      consensusRestaurant,
+    ],
+  );
 
   // Lock the displayed restaurant so it doesn't change from under the user
   // when other guests vote. Only release when THIS user votes on it.
@@ -162,25 +116,21 @@ export default function RestaurantSwipe({
   }
 
   // Count remaining available restaurants (not rejected, not all voted on)
-  const remainingCount = useMemo(() => {
-    return cachedRestaurants.filter((r) => {
-      if (rejectedRestaurantIds.has(r.id)) return false;
-      if (rejectedCuisineTypes.has(r.type)) return false;
-      // Check if all guests have voted on this restaurant
-      const restaurantVoteMap = votesByRestaurant.get(r.id);
-      if (restaurantVoteMap) {
-        const allVoted = guests.every((g) => restaurantVoteMap.has(g.id));
-        if (allVoted) return false;
-      }
-      return true;
-    }).length;
-  }, [
-    cachedRestaurants,
-    rejectedRestaurantIds,
-    rejectedCuisineTypes,
-    votesByRestaurant,
-    guests,
-  ]);
+  const remainingCount = useMemo(
+    () =>
+      countRemaining(
+        cachedRestaurants,
+        { rejectedRestaurantIds, rejectedCuisineTypes, votesByRestaurant },
+        guests,
+      ),
+    [
+      cachedRestaurants,
+      rejectedRestaurantIds,
+      rejectedCuisineTypes,
+      votesByRestaurant,
+      guests,
+    ],
+  );
 
   // Auto-fetch more restaurants when running low
   const triggerFetchMore = useCallback(() => {
@@ -486,7 +436,12 @@ function SwipeView({
   ) => void;
 }) {
   return (
-    <div className="max-w-full w-full mx-auto">
+    <div
+      className="max-w-full w-full mx-auto"
+      role="group"
+      aria-label={`Vote on ${restaurant.name}`}
+      aria-live="polite"
+    >
       <h2 className="heading-sm text-neutral-300 mb-2">Would you eat here?</h2>
 
       <RestaurantCard restaurant={restaurant} />

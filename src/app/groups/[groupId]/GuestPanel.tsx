@@ -1,6 +1,7 @@
 "use client";
 
 import { RestaurantVote } from "@/types";
+import { countExclusionsByGuest } from "@/utils/voting";
 import { useState } from "react";
 
 type GuestSummary = {
@@ -31,32 +32,18 @@ type GuestPanelProps = {
 export default function GuestPanel({ group, allVotes }: GuestPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // const excludedCuisines = group?.excludedCuisines ?? [];
   const linkedGuests = group?.guests ?? [];
 
-  // Build a map of guestId -> count of excluded restaurants and cuisines
-  const exclusedRestaurantsByGuest = new Map<string, number>();
-  const excludedCuisinesByGuest = new Map<string, number>();
-  for (const vote of allVotes) {
-    if (vote.vote === "no_restaurant") {
-      exclusedRestaurantsByGuest.set(
-        vote.guestId,
-        (exclusedRestaurantsByGuest.get(vote.guestId) ?? 0) + 1,
-      );
-    } else if (vote.vote === "no_cuisine") {
-      excludedCuisinesByGuest.set(
-        vote.guestId,
-        (excludedCuisinesByGuest.get(vote.guestId) ?? 0) + 1,
-      );
-    }
-  }
+  // Count how many restaurants and cuisines each guest has excluded
+  const { excludedRestaurantsByGuest, excludedCuisinesByGuest } =
+    countExclusionsByGuest(allVotes);
 
   // Build guest summaries from linked guests
   const guests: GuestSummary[] = linkedGuests
     .map((guest) => ({
       id: guest.id,
       name: guest.name || "Anonymous",
-      excludedRestaurantsCount: exclusedRestaurantsByGuest.get(guest.id) ?? 0,
+      excludedRestaurantsCount: excludedRestaurantsByGuest.get(guest.id) ?? 0,
       excludedCuisinesCount: excludedCuisinesByGuest.get(guest.id) ?? 0,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));

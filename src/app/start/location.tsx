@@ -15,6 +15,7 @@ import db from "@/utils/db";
 import {
   getRadiusOptions,
   getDefaultRadius,
+  GEOLOCATION_OPTIONS,
   type RadiusOption,
   type UnitSystem,
 } from "@/utils/constants";
@@ -145,7 +146,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
         }
         setGeoState({ status: "error", message });
       },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
+      GEOLOCATION_OPTIONS,
     );
   }, []);
 
@@ -254,10 +255,15 @@ export default function Location({ name, setChangeName }: LocationProps) {
           </Listbox>
 
           {/* Unit toggle */}
-          <div className="inline-flex rounded-md overflow-hidden gap-1 border border-neutral-300">
+          <div
+            className="inline-flex rounded-md overflow-hidden gap-1 border border-neutral-300"
+            role="group"
+            aria-label="Distance units"
+          >
             <button
               type="button"
               onClick={() => handleUnitChange("metric")}
+              aria-pressed={units === "metric"}
               className={`px-2 py-2 text-sm rounded transition-colors cursor-pointer ${
                 units === "metric"
                   ? "text-primary-500 font-bold bg-neutral-100"
@@ -269,6 +275,7 @@ export default function Location({ name, setChangeName }: LocationProps) {
             <button
               type="button"
               onClick={() => handleUnitChange("imperial")}
+              aria-pressed={units === "imperial"}
               className={`px-2 py-2 text-sm rounded transition-colors cursor-pointer ${
                 units === "imperial"
                   ? "text-primary-500 font-bold bg-neutral-100"

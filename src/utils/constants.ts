@@ -1,3 +1,13 @@
+/** Debounce delay (ms) before firing a location autocomplete request. */
+export const LOCATION_SEARCH_DEBOUNCE_MS = 300;
+
+/** Options passed to navigator.geolocation.getCurrentPosition. */
+export const GEOLOCATION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: false,
+  timeout: 15000,
+  maximumAge: 300000,
+};
+
 export type UnitSystem = "metric" | "imperial";
 
 export type RadiusOption = {

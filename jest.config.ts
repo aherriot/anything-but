@@ -6,7 +6,8 @@ const createJestConfig = nextJest({
 });
 
 const config: Config = {
-  collectCoverage: true,
+  testEnvironment: "jsdom",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   coverageDirectory: "coverage",
   coverageProvider: "v8",
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { LOCATION_SEARCH_DEBOUNCE_MS } from "@/utils/constants";
 
 export type Location = {
   placeId: string;
@@ -11,7 +12,10 @@ type LocationSearchResponse = {
   error?: string;
 };
 
-export const useLocationSearch = (query: string, debounceMs: number = 300) => {
+export const useLocationSearch = (
+  query: string,
+  debounceMs: number = LOCATION_SEARCH_DEBOUNCE_MS,
+) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
