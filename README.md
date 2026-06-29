@@ -96,6 +96,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run typecheck`     | Type-check with `tsc --noEmit`.             |
 | `npm test`              | Run the Jest test suite.                    |
 | `npm run test:coverage` | Run tests with a coverage report.           |
+| `npm run test:e2e`      | Run the Playwright end-to-end tests.        |
 
 ## License
 
