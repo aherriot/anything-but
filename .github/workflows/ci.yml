@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Placeholders so module-level env guards don't fail the build.
+          # No network calls happen at build time.
+          NEXT_PUBLIC_INSTANT_APP_ID: build-placeholder
+          INSTANT_APP_ADMIN_TOKEN: build-placeholder
+          GOOGLE_PLACES_API_KEY: build-placeholder
