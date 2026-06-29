@@ -18,6 +18,7 @@ const config: Config = {
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
     "!src/**/*.d.ts",
+    "!src/types.ts", // pure type declarations — no runtime code to exercise
     "!src/instant.schema.ts",
     "!src/instant.perms.ts",
   ],

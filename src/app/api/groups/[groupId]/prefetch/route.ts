@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { id as instantId } from "@instantdb/admin";
 import adminDb from "@/utils/db-admin";
-import { CUISINE_MAP } from "@/utils/constants";
+import { mapPriceLevel, resolveCuisineType } from "@/utils/places";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_TEXT_SEARCH_URL =
@@ -68,17 +68,6 @@ type PlaceDetailsResponse = {
     latitude: number;
     longitude: number;
   };
-};
-
-const mapPriceLevel = (priceLevel?: string): string => {
-  const priceLevelMap: Record<string, string> = {
-    PRICE_LEVEL_FREE: "$",
-    PRICE_LEVEL_INEXPENSIVE: "$",
-    PRICE_LEVEL_MODERATE: "$$",
-    PRICE_LEVEL_EXPENSIVE: "$$$",
-    PRICE_LEVEL_VERY_EXPENSIVE: "$$$$",
-  };
-  return priceLevelMap[priceLevel || ""] || "$$";
 };
 
 async function resolveCoordinates(
@@ -251,12 +240,7 @@ export async function POST(
     for (const place of places) {
       if (existingIds.has(place.id)) continue;
 
-      let resolvedType = place.primaryType;
-      // If primaryType is missing or not in our cuisine map, try to find a suitable type from the types array
-      if (!place.primaryType || !CUISINE_MAP[place.primaryType]) {
-        resolvedType =
-          place.types?.find((t) => CUISINE_MAP[t]) || "generic_restaurant";
-      }
+      const resolvedType = resolveCuisineType(place.primaryType, place.types);
 
       const restaurantId = instantId();
       transactions.push(
