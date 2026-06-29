@@ -89,3 +89,72 @@ export const CUISINE_MAP: Record<string, string> = {
   vegetarian_restaurant: "Vegetarian",
   vietnamese_restaurant: "Vietnamese",
 } as const;
+
+/**
+ * Grammatical category for a cuisine, used to build natural-sounding sentences
+ * like "No, I don't want ___":
+ *
+ * - "adjective": a descriptor that needs "food" to read as a noun phrase
+ *     → "Mexican food", "Italian food". This is the default.
+ * - "dish": a standalone food noun that stands on its own
+ *     → "Sushi", "Pizza", "Brunch".
+ * - "place": a countable venue that needs an article
+ *     → "a Bar", "a Pub", "a Steakhouse".
+ */
+export type CuisineGrammar = "adjective" | "dish" | "place";
+
+/** Cuisines that read as standalone food nouns (no trailing "food", no article). */
+const DISH_CUISINES = new Set<string>([
+  "barbecue_restaurant",
+  "breakfast_restaurant",
+  "brunch_restaurant",
+  "dessert_restaurant",
+  "fast_food_restaurant",
+  "fine_dining_restaurant",
+  "hamburger_restaurant",
+  "meal_takeaway",
+  "pizza_restaurant",
+  "ramen_restaurant",
+  "seafood_restaurant",
+  "sushi_restaurant",
+]);
+
+/** Cuisines that name a venue and need an article ("a Bar", "a Pub"). */
+const PLACE_CUISINES = new Set<string>([
+  "bar",
+  "bar_and_grill",
+  "buffet_restaurant",
+  "cafeteria",
+  "coffee_shop",
+  "diner",
+  "pub",
+  "steak_house",
+]);
+
+export function getCuisineGrammar(type: string): CuisineGrammar {
+  if (PLACE_CUISINES.has(type)) return "place";
+  if (DISH_CUISINES.has(type)) return "dish";
+  return "adjective";
+}
+
+/**
+ * Returns the unstyled text that wraps a cuisine name in a negation like
+ * "No, I don't want {prefix}{name}{suffix}". The cuisine name itself
+ * (CUISINE_MAP[type]) is rendered separately so it can be styled.
+ */
+export function getCuisineNegationAffixes(type: string): {
+  prefix: string;
+  suffix: string;
+} {
+  switch (getCuisineGrammar(type)) {
+    case "place": {
+      const name = CUISINE_MAP[type] ?? "";
+      return { prefix: /^[aeiou]/i.test(name) ? "an " : "a ", suffix: "" };
+    }
+    case "dish":
+      return { prefix: "", suffix: "" };
+    case "adjective":
+    default:
+      return { prefix: "", suffix: " food" };
+  }
+}

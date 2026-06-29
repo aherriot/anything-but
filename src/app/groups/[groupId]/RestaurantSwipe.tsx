@@ -2,7 +2,7 @@
 
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { id } from "@instantdb/react";
-import { CUISINE_MAP } from "@/utils/constants";
+import { CUISINE_MAP, getCuisineNegationAffixes } from "@/utils/constants";
 import {
   computeVoteState,
   findConsensusRestaurant,
@@ -24,24 +24,14 @@ type RestaurantSwipeProps = {
 };
 
 function getCuisineName(type: string): ReactNode {
-  const cuisineName = (
-    <span className="font-semibold text-accent-600">{CUISINE_MAP[type]}</span>
+  const { prefix, suffix } = getCuisineNegationAffixes(type);
+  return (
+    <>
+      {prefix}
+      <span className="font-semibold text-accent-600">{CUISINE_MAP[type]}</span>
+      {suffix}
+    </>
   );
-  if (
-    [
-      "ramen_restaurant",
-      "barbecue_restaurant",
-      "breakfast_restaurant",
-      "dessert_restaurant",
-      "brunch_restaurant",
-      "fast_food_restaurant",
-      "seafood_restaurant",
-    ].includes(type)
-  ) {
-    return cuisineName;
-  } else {
-    return <>{cuisineName} food</>;
-  }
 }
 
 export default function RestaurantSwipe({
