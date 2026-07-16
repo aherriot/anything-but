@@ -4,10 +4,12 @@ import { InstantRules } from "@instantdb/react";
 // - view / create / update / delete gate reads and attribute writes.
 //   `data` is the existing row (and the new row inside `create`);
 //   `newData` is the proposed row inside `update`.
-// - link / unlink are governed by their OWN rules (keyed by relationship
-//   label) and default to `true` when unset. This is why locking `update`
-//   below to owners-only does NOT stop a guest from joining a group or from
-//   attaching a vote to a group/restaurant — those are link operations.
+// - link / unlink are gated by dedicated rules keyed by relationship label.
+//   When a link rule is NOT set, it falls back to the namespace's `update`
+//   rule. That matters here: joining a group and attaching a vote are link
+//   operations that terminate on `groups` / `cachedRestaurants`, so once we
+//   lock those namespaces' `update` down to owners / server-only we MUST add
+//   explicit link rules or non-owners can no longer join or vote.
 // - Restaurant data is only ever written server-side via the admin token
 //   (see src/app/api/groups/[groupId]/prefetch/route.ts), which bypasses
 //   these rules entirely.
@@ -19,11 +21,17 @@ const rules = {
       // A group may only be created with the creator as its owner.
       create: "auth.id != null && auth.id == data.ownerId",
       // Only the owner can change a group's fields (name, location, radius…).
-      // Guests joining and votes attaching are link operations, so this does
-      // not block collaboration.
       update: "auth.id == data.ownerId",
       // Only the owner can delete a group.
       delete: "auth.id == data.ownerId",
+      // Any signed-in user may join the group (link themselves as a guest)
+      // and have their votes attached. These are distinct from editing the
+      // group's attributes above. Linking someone else as a guest is still
+      // blocked by the $users side ($users.update is self-only).
+      link: {
+        guests: "auth.id != null",
+        restaurantVotes: "auth.id != null",
+      },
     },
   },
   cachedRestaurants: {
@@ -35,6 +43,11 @@ const rules = {
       create: "false",
       update: "false",
       delete: "false",
+      // …but a signed-in guest must be able to attach their vote to a
+      // restaurant, which is a link (not an attribute write).
+      link: {
+        votes: "auth.id != null",
+      },
     },
   },
   restaurantVotes: {
@@ -47,6 +60,11 @@ const rules = {
       update: "auth.id == data.guestId && auth.id == newData.guestId",
       // A guest may only delete their own vote.
       delete: "auth.id == data.guestId",
+      // Attaching a new vote to its group and restaurant.
+      link: {
+        group: "auth.id != null",
+        restaurant: "auth.id != null",
+      },
     },
   },
   $users: {
