@@ -24,10 +24,6 @@ const GOOGLE_SEARCH_FIELD_MASK = [
 ].join(",");
 
 const BATCH_SIZE = 20;
-// const MIN_RESTAURANTS_THRESHOLD = 5;
-
-// In-memory lock to prevent concurrent prefetch calls for the same group
-const activePrefetches = new Set<string>();
 
 type GooglePlacePhoto = {
   name: string;
@@ -145,16 +141,6 @@ export async function POST(
 ) {
   const { groupId } = await params;
 
-  // Prevent concurrent prefetch calls for the same group
-  if (activePrefetches.has(groupId)) {
-    return NextResponse.json({
-      success: true,
-      data: { fetched: 0, message: "Prefetch already in progress" },
-    });
-  }
-
-  activePrefetches.add(groupId);
-
   try {
     if (!GOOGLE_API_KEY) {
       return NextResponse.json(
@@ -179,7 +165,11 @@ export async function POST(
       );
     }
 
-    // Don't re-fetch if already fetching
+    // Guard against concurrent prefetches using the persisted fetchStatus
+    // rather than in-process state: on serverless, callers may land on
+    // different instances, so the group row in InstantDB is the only shared
+    // source of truth. (The googlePlaceId de-dupe below bounds the impact of
+    // any residual race between the read here and the "fetching" write.)
     if (group.fetchStatus === "fetching") {
       return NextResponse.json({
         success: true,
@@ -307,8 +297,6 @@ export async function POST(
       },
       { status: 500 },
     );
-  } finally {
-    activePrefetches.delete(groupId);
   }
 }
 
