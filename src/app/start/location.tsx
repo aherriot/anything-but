@@ -82,7 +82,10 @@ export default function Location({ name, setChangeName }: LocationProps) {
     // Trigger restaurant prefetch in the background (fire and forget)
     fetch(`/api/groups/${newGroupId}/prefetch`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user.refresh_token}`,
+      },
       body: JSON.stringify({}),
     }).catch((err) => console.error("Failed to trigger prefetch:", err));
 
