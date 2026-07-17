@@ -6,6 +6,8 @@ import RestaurantSwipe from "./RestaurantSwipe";
 import db from "@/utils/db";
 import Header from "@/components/Header";
 import Name from "@/components/Name";
+import ErrorState from "@/components/ErrorState";
+import LoadingScreen from "@/components/LoadingScreen";
 import GuestPanel from "./GuestPanel";
 
 export default function Groups({
@@ -70,36 +72,36 @@ export default function Groups({
     hintDismissedRef.current = true;
   }, []);
 
-  if (!user) {
+  if (!user || isLoading || isAuthLoading || isUserLoading) {
     return (
       <div className="min-h-screen bg-neutral-900">
         <Header showInvite />
-        <div className="text-center text-neutral-400">Loading...</div>
+        <LoadingScreen label="Loading your group…" />
       </div>
     );
   }
 
-  if (isLoading || isAuthLoading || isUserLoading || !user) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-neutral-900">
-        <Header showInvite />
-        <div>Loading...</div>
-      </div>
+      <ErrorState message="We couldn't load this group just now. Give it another moment and try again." />
     );
   }
-
-  if (error) return <div>Error fetching data: {error.message}</div>;
 
   if (!group) {
-    return <div>Group not found</div>;
+    return (
+      <ErrorState
+        title="Group not found"
+        message="This group may have expired — groups are cleared after 24 hours — or the link is incorrect."
+      />
+    );
   }
 
   if (!group.placeId) {
     return (
-      <div className="min-h-screen bg-neutral-900">
-        <Header showInvite />
-        <div>Location not found</div>
-      </div>
+      <ErrorState
+        title="No location set"
+        message="This group doesn't have a location yet, so we can't find restaurants for it."
+      />
     );
   }
 
