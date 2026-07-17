@@ -135,6 +135,21 @@ async function fetchRestaurantBatch(
   };
 }
 
+/**
+ * Resolve the caller's InstantDB user from the `Authorization: Bearer <token>`
+ * header. Returns null when the header is missing or the token is invalid.
+ */
+async function getRequestUser(request: NextRequest): Promise<{ id: string } | null> {
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return null;
+  try {
+    return await adminDb.auth.verifyToken(token);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ groupId: string }> },
@@ -142,6 +157,16 @@ export async function POST(
   const { groupId } = await params;
 
   try {
+    // Prefetch spends billable Google Places quota and writes to the group,
+    // so require the caller to be an authenticated member of that group.
+    const user = await getRequestUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
     if (!GOOGLE_API_KEY) {
       return NextResponse.json(
         { success: false, error: "Google Places API key is not configured" },
@@ -154,6 +179,7 @@ export async function POST(
       groups: {
         $: { where: { id: groupId }, limit: 1 },
         cachedRestaurants: {},
+        guests: {},
       },
     });
 
@@ -162,6 +188,17 @@ export async function POST(
       return NextResponse.json(
         { success: false, error: "Group not found" },
         { status: 404 },
+      );
+    }
+
+    // Only the owner or a guest who has joined the group may prefetch for it.
+    const isMember =
+      group.ownerId === user.id ||
+      (group.guests ?? []).some((guest) => guest.id === user.id);
+    if (!isMember) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 },
       );
     }
 

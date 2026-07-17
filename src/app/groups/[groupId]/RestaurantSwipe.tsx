@@ -16,6 +16,7 @@ import type { CachedRestaurant, RestaurantVote } from "@/types";
 type RestaurantSwipeProps = {
   groupId: string;
   guestId: string;
+  authToken: string;
   guests: { id: string; name?: string }[];
   cachedRestaurants: CachedRestaurant[];
   allVotes: (RestaurantVote & { restaurantId: string })[];
@@ -37,6 +38,7 @@ function getCuisineName(type: string): ReactNode {
 export default function RestaurantSwipe({
   groupId,
   guestId,
+  authToken,
   guests,
   cachedRestaurants,
   allVotes,
@@ -128,10 +130,13 @@ export default function RestaurantSwipe({
 
     fetch(`/api/groups/${groupId}/prefetch`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
       body: JSON.stringify({}),
     }).catch((err) => console.error("Failed to fetch more restaurants:", err));
-  }, [groupId, fetchStatus]);
+  }, [groupId, authToken, fetchStatus]);
 
   useEffect(() => {
     const MIN_THRESHOLD = 5;

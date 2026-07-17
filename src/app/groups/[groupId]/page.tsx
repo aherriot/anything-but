@@ -149,6 +149,7 @@ export default function Groups({
         <RestaurantSwipe
           groupId={groupId}
           guestId={user.id}
+          authToken={user.refresh_token}
           guests={group.guests.map((g) => ({ id: g.id, name: g.name }))}
           cachedRestaurants={restaurantsWithVotes}
           allVotes={allVotes}

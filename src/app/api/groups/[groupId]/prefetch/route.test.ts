@@ -19,6 +19,7 @@ jest.mock("../../../../../utils/db-admin", () => {
       query: jest.fn(),
       transact: jest.fn().mockResolvedValue(undefined),
       tx: new Proxy({}, { get: () => namespace }),
+      auth: { verifyToken: jest.fn() },
     },
   };
 });
@@ -27,6 +28,7 @@ import adminDb from "@/utils/db-admin";
 
 const query = adminDb.query as unknown as jest.Mock;
 const transact = adminDb.transact as unknown as jest.Mock;
+const verifyToken = adminDb.auth.verifyToken as unknown as jest.Mock;
 const mockFetch = jest.fn();
 
 // The route captures GOOGLE_PLACES_API_KEY at import; set it before importing.
@@ -43,12 +45,21 @@ beforeAll(async () => {
 beforeEach(() => {
   query.mockReset();
   transact.mockReset().mockResolvedValue(undefined);
+  verifyToken.mockReset().mockResolvedValue({ id: "u1" });
   mockFetch.mockReset();
   global.fetch = mockFetch as unknown as typeof fetch;
 });
 
-function postReq(body: unknown = {}) {
-  return { json: async () => body } as unknown as NextRequest;
+function postReq(body: unknown = {}, token: string | null = "valid-token") {
+  return {
+    json: async () => body,
+    headers: {
+      get: (name: string) =>
+        name.toLowerCase() === "authorization" && token
+          ? `Bearer ${token}`
+          : null,
+    },
+  } as unknown as NextRequest;
 }
 
 function ctx(groupId = "g1") {
@@ -65,9 +76,44 @@ describe("POST /api/groups/[groupId]/prefetch", () => {
     expect(transact).not.toHaveBeenCalled();
   });
 
+  it("returns 401 when the request is unauthenticated", async () => {
+    const res = await POST(postReq({}, null), ctx());
+
+    expect(res.status).toBe(401);
+    expect(query).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when the caller is not a member of the group", async () => {
+    verifyToken.mockResolvedValueOnce({ id: "outsider" });
+    query.mockResolvedValueOnce({
+      groups: [{ id: "g1", ownerId: "u1", guests: [{ id: "u1" }] }],
+    });
+
+    const res = await POST(postReq(), ctx());
+
+    expect(res.status).toBe(403);
+    expect(transact).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("allows a guest who has joined (not just the owner) to prefetch", async () => {
+    verifyToken.mockResolvedValueOnce({ id: "guest2" });
+    query.mockResolvedValueOnce({
+      groups: [
+        { id: "g1", ownerId: "u1", guests: [{ id: "guest2" }], fetchStatus: "fetching" },
+      ],
+    });
+
+    const res = await POST(postReq(), ctx());
+
+    const body = await res.json();
+    expect(body.data.message).toBe("Already fetching");
+  });
+
   it("is a no-op when the group is already fetching", async () => {
     query.mockResolvedValueOnce({
-      groups: [{ id: "g1", fetchStatus: "fetching" }],
+      groups: [{ id: "g1", ownerId: "u1", fetchStatus: "fetching" }],
     });
 
     const res = await POST(postReq(), ctx());
@@ -79,7 +125,7 @@ describe("POST /api/groups/[groupId]/prefetch", () => {
 
   it("is a no-op when exhausted and no explicit page token is given", async () => {
     query.mockResolvedValueOnce({
-      groups: [{ id: "g1", fetchStatus: "exhausted" }],
+      groups: [{ id: "g1", ownerId: "u1", fetchStatus: "exhausted" }],
     });
 
     const res = await POST(postReq(), ctx());
@@ -93,6 +139,7 @@ describe("POST /api/groups/[groupId]/prefetch", () => {
       groups: [
         {
           id: "g1",
+          ownerId: "u1",
           placeId: "place1",
           fetchStatus: "ready",
           searchRadius: 5000,
@@ -138,7 +185,7 @@ describe("POST /api/groups/[groupId]/prefetch", () => {
 
   it("returns 500 and resets fetch status when Google fails", async () => {
     query.mockResolvedValueOnce({
-      groups: [{ id: "g1", placeId: "place1", fetchStatus: "ready" }],
+      groups: [{ id: "g1", ownerId: "u1", placeId: "place1", fetchStatus: "ready" }],
     });
     mockFetch.mockResolvedValueOnce({ ok: false, status: 500 }); // resolveCoordinates fails
 
