@@ -2,79 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 
-// Max cache size in bytes (default 50MB)
-const MAX_CACHE_BYTES = parseInt(
-  process.env.PHOTO_CACHE_MAX_BYTES || String(50 * 1024 * 1024),
-  10,
-);
-
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-interface CacheEntry {
-  buffer: ArrayBuffer;
-  contentType: string;
-  timestamp: number;
-  size: number;
-}
-
-/** LRU cache keyed by canonical search-param string */
-const cache = new Map<string, CacheEntry>();
-let currentCacheBytes = 0;
-
-function evictExpired() {
-  const now = Date.now();
-  for (const [key, entry] of cache) {
-    if (now - entry.timestamp > CACHE_TTL_MS) {
-      cache.delete(key);
-      currentCacheBytes -= entry.size;
-    }
-  }
-}
-
-function evictLRU() {
-  // Map iteration order is insertion order; least-recently-used is first
-  while (currentCacheBytes > MAX_CACHE_BYTES && cache.size > 0) {
-    const oldest = cache.keys().next().value!;
-    const entry = cache.get(oldest)!;
-    cache.delete(oldest);
-    currentCacheBytes -= entry.size;
-  }
-}
-
-function cacheGet(key: string): CacheEntry | undefined {
-  const entry = cache.get(key);
-  if (!entry) return undefined;
-
-  // Expired – remove and miss
-  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
-    cache.delete(key);
-    currentCacheBytes -= entry.size;
-    return undefined;
-  }
-
-  // Move to end (most-recently-used)
-  cache.delete(key);
-  cache.set(key, entry);
-  return entry;
-}
-
-function cachePut(key: string, buffer: ArrayBuffer, contentType: string) {
-  // Remove existing entry if present
-  const existing = cache.get(key);
-  if (existing) {
-    cache.delete(key);
-    currentCacheBytes -= existing.size;
-  }
-
-  const size = buffer.byteLength;
-  currentCacheBytes += size;
-
-  cache.set(key, { buffer, contentType, timestamp: Date.now(), size });
-
-  // Evict stale entries first, then LRU if still over budget
-  evictExpired();
-  evictLRU();
-}
+// A Google photo reference always resolves to the same image, so for a given
+// (reference, size) the response is immutable. Rather than cache in process
+// memory — which is unreliable on serverless, where each invocation may be a
+// cold, isolated instance — we let the CDN and the browser cache the bytes:
+//   - max-age: browsers keep it for a day.
+//   - s-maxage: the shared CDN keeps it for a year, so one cold fetch from
+//     Google warms the edge for every subsequent viewer.
+//   - immutable: browsers won't revalidate while it's fresh.
+// Only successful responses carry this header; errors stay uncached.
+const IMAGE_CACHE_CONTROL =
+  "public, max-age=86400, s-maxage=31536000, immutable";
 
 export async function GET(request: NextRequest) {
   try {
@@ -97,28 +35,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build a stable cache key from the relevant params
-    const cacheKey = `${photoReference}|${maxWidth}|${maxHeight}`;
+    // Construct the Google Places Photo API URL. The API key travels in the
+    // header only, never the query string.
+    const photoUrl = `https://places.googleapis.com/v1/${photoReference}/media?maxWidthPx=${maxWidth}&maxHeightPx=${maxHeight}`;
 
-    // Return from cache if available
-    const cached = cacheGet(cacheKey);
-    if (cached) {
-      return new NextResponse(cached.buffer, {
-        headers: {
-          "Content-Type": cached.contentType,
-          "Cache-Control": "public, max-age=86400",
-        },
-      });
-    }
-
-    // Construct the Google Places Photo API URL
-    const photoUrl = `https://places.googleapis.com/v1/${photoReference}/media?key=${GOOGLE_API_KEY}&maxWidthPx=${maxWidth}&maxHeightPx=${maxHeight}`;
-
-    // Fetch the image from Google
     const response = await fetch(photoUrl, {
       headers: {
         "X-Goog-Api-Key": GOOGLE_API_KEY,
       },
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
@@ -128,18 +53,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get the image data
     const imageBuffer = await response.arrayBuffer();
     const contentType = response.headers.get("content-type") || "image/jpeg";
 
-    // Store in cache
-    cachePut(cacheKey, imageBuffer, contentType);
-
-    // Return the image with appropriate headers
     return new NextResponse(imageBuffer, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400", // Cache for 24 hours
+        "Cache-Control": IMAGE_CACHE_CONTROL,
       },
     });
   } catch (error) {

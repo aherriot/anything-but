@@ -59,18 +59,29 @@ describe("GET /api/places/photo", () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
-  it("serves a repeat request from cache without hitting Google again", async () => {
+  it("sets long-lived, CDN-cacheable headers so the edge dedupes repeats", async () => {
     mockFetch.mockResolvedValueOnce(imageResponse());
 
     const { GET } = await loadRoute("test-key");
-    const url = `${base}?photoReference=ref-cached&maxWidth=400&maxHeight=400`;
+    const res = await GET(
+      req(`${base}?photoReference=ref-cached&maxWidth=400&maxHeight=400`),
+    );
 
-    await GET(req(url));
-    const second = await GET(req(url));
+    const cacheControl = res.headers.get("Cache-Control") ?? "";
+    expect(cacheControl).toContain("public");
+    expect(cacheControl).toContain("s-maxage=31536000");
+    expect(cacheControl).toContain("immutable");
+  });
 
-    expect(second.status).toBe(200);
-    // Only the first (cache-miss) request reached Google.
-    expect(mockFetch).toHaveBeenCalledTimes(1);
+  it("keeps the API key out of the upstream query string", async () => {
+    mockFetch.mockResolvedValueOnce(imageResponse());
+
+    const { GET } = await loadRoute("test-key");
+    await GET(req(`${base}?photoReference=ref1`));
+
+    const calledUrl = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrl).not.toContain("key=");
+    expect(calledUrl).toContain("places.googleapis.com");
   });
 
   it("propagates Google's status when the photo fetch fails", async () => {
